@@ -1,1 +1,2 @@
-<p>login works!</p>
+<p>login works! {{ afAuth.user | async | json }}</p>
+<button (click)="login()">Login with Spotify</button>

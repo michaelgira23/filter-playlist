@@ -11,15 +11,17 @@ import { environment } from '../environments/environment';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { LoginComponent } from './login/login.component';
-import { PlaySongComponent } from './play-song/play-song.component';
+import { FilterPlaylistComponent } from './filter-playlist/filter-playlist.component';
 import { SelectPlaylistComponent } from './select-playlist/select-playlist.component';
+import { UpsertPlaylistComponent } from './upsert-playlist/upsert-playlist.component';
 
 @NgModule({
 	declarations: [
 		AppComponent,
-		PlaySongComponent,
 		LoginComponent,
-		SelectPlaylistComponent
+		FilterPlaylistComponent,
+		SelectPlaylistComponent,
+		UpsertPlaylistComponent
 	],
 	imports: [
 		BrowserModule,

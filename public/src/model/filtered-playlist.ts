@@ -1,7 +1,8 @@
 export interface FilteredPlaylist {
 	originId: string;
-	criteria: Criteria[];
+	criteria: { [id: string]: Criteria };
 	filteredId: string;
+	createdBy: string;
 }
 
 export interface Criteria {
