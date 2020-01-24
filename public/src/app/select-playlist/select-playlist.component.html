@@ -1,1 +1,3 @@
 <p>select-playlist works!</p>
+
+<p *ngFor="let playlist of filteredPlaylists | async">{{playlist | json}}</p>
