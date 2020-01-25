@@ -5,6 +5,7 @@ import { AngularFireModule } from '@angular/fire';
 import { AngularFireAnalyticsModule } from '@angular/fire/analytics';
 import { AngularFirestoreModule } from '@angular/fire/firestore';
 import { AngularFireAuthModule } from '@angular/fire/auth';
+import { AngularFireAuthGuardModule } from '@angular/fire/auth-guard';
 
 import { environment } from '../environments/environment';
 
@@ -30,7 +31,8 @@ import { UpsertPlaylistComponent } from './upsert-playlist/upsert-playlist.compo
 		AngularFireModule.initializeApp(environment.firebase),
 		AngularFireAnalyticsModule,
 		AngularFirestoreModule,
-		AngularFireAuthModule
+		AngularFireAuthModule,
+		AngularFireAuthGuardModule
 	],
 	providers: [],
 	bootstrap: [AppComponent]

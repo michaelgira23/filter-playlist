@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AngularFireAuth } from '@angular/fire/auth';
 import { auth } from 'firebase/app';
@@ -14,7 +14,7 @@ import { environment } from '../../environments/environment';
 })
 export class LoginComponent implements OnInit {
 
-	constructor(private route: ActivatedRoute, public afAuth: AngularFireAuth, private http: HttpClient) { }
+	constructor(private route: ActivatedRoute, private router: Router, public afAuth: AngularFireAuth, private http: HttpClient) { }
 
 	ngOnInit() {
 		this.route.queryParams.pipe(
@@ -34,6 +34,7 @@ export class LoginComponent implements OnInit {
 			async token => {
 				console.log('token', token);
 				await this.afAuth.auth.signInWithCustomToken(token);
+				this.router.navigate(['/']);
 			},
 			error => {
 				if (error.error instanceof ErrorEvent) {
