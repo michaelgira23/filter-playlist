@@ -9,5 +9,6 @@ export const environment = {
 		messagingSenderId: '767916801008',
 		appId: '1:767916801008:web:10f5433284cb660dc1fb35',
 		measurementId: 'G-33YVXNK4E0'
-	}
+	},
+	firebaseFunctionsHost: 'https://us-central1-filter-playlist.cloudfunctions.net'
 };

@@ -1,9 +1,9 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
+import { HttpClientModule } from '@angular/common/http';
 import { AngularFireModule } from '@angular/fire';
 import { AngularFireAnalyticsModule } from '@angular/fire/analytics';
 import { AngularFirestoreModule } from '@angular/fire/firestore';
-import { AngularFireStorageModule } from '@angular/fire/storage';
 import { AngularFireAuthModule } from '@angular/fire/auth';
 
 import { environment } from '../environments/environment';
@@ -26,6 +26,7 @@ import { UpsertPlaylistComponent } from './upsert-playlist/upsert-playlist.compo
 	imports: [
 		BrowserModule,
 		AppRoutingModule,
+		HttpClientModule,
 		AngularFireModule.initializeApp(environment.firebase),
 		AngularFireAnalyticsModule,
 		AngularFirestoreModule,
