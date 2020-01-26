@@ -1,2 +1,14 @@
-<p>login works! {{ afAuth.user | async | json }}</p>
-<button (click)="login()">Login with Spotify</button>
+<!-- <p>login works! {{ afAuth.user | async | json }}</p> -->
+<div *ngIf="this.loading === false" class="container">
+	<button class="button" (click)="login()">Login with Spotify</button>
+	<h2>What can we access?</h2>
+	<h3>View Playlists</h3>
+	<p>We can read your current public, private, and collaborative playlists so that you can filter them here.</p>
+	<h3>Modify Playlists</h3>
+	<p>We will only add or remove songs from specific playlists based on criteria that you define.</p>
+	<h3>Stream Spotify</h3>
+	<p>You can play Spotify songs on this website, so you can mark if a song passes your criteria.</p>
+</div>
+<div *ngIf="this.loading === true" class="container">
+	<h1>Hang tight, logging you in...</h1>
+</div>

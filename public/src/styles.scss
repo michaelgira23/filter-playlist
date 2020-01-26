@@ -1,1 +1,60 @@
-/* You can add global styles to this file, and also import other style files */
+/**
+ * Global Styles
+ */
+
+$black: #191414;
+$white: #FFFFFF;
+$green: #1DB954;
+
+html {
+	background: $black;
+	color: $white;
+	font-family: 'Source Sans Pro', sans-serif;
+	font-size: 1.125rem;
+}
+
+h1, h2 ,h3 {
+	font-family: 'Cabin', sans-serif;
+}
+
+h1 {
+	font-size: 3rem;
+}
+
+h2 {
+	font-size: 2.25rem;
+	margin-bottom: 1.75rem;
+}
+
+h3 {
+	font-size: 1.5rem;
+	margin-bottom: 0.625rem;
+}
+
+p {
+	margin-bottom: 2.25rem;
+}
+
+.container {
+	width: 100%;
+	max-width: 35.25rem;
+	margin: 0 auto;
+	padding: 5rem;
+}
+
+.button {
+	width: 100%;
+	margin-bottom: 4.75rem;
+	padding: 2.25rem;
+	cursor: pointer;
+
+	background: $green;
+	border-radius: 1rem;
+	border: none;
+
+	color: $white;
+	font-family: 'Cabin', sans-serif;
+	font-size: 2.25rem;
+	font-weight: bold;
+	text-transform: uppercase;
+}

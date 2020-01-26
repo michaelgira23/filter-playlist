@@ -14,6 +14,8 @@ import { environment } from '../../environments/environment';
 })
 export class LoginComponent implements OnInit {
 
+	loading = null;
+
 	constructor(private route: ActivatedRoute, private router: Router, public afAuth: AngularFireAuth, private http: HttpClient) { }
 
 	ngOnInit() {
@@ -22,11 +24,14 @@ export class LoginComponent implements OnInit {
 				console.log('url params', params, !!params.error, params.code);
 				if (params.error) {
 					console.log('Spotify Error:', params.error);
+					this.loading = false;
 					return false;
 				} else if (params.code) {
 					console.log('javascript token!', params.code);
+					this.loading = true;
 					return true;
 				}
+				this.loading = false;
 				return false;
 			}),
 			switchMap(params => this.verifyToken(params.code, params.state))
