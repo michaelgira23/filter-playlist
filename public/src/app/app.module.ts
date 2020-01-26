@@ -12,6 +12,7 @@ import { environment } from '../environments/environment';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { LoginComponent } from './login/login.component';
+import { LogoutComponent } from './logout/logout.component';
 import { FilterPlaylistComponent } from './filter-playlist/filter-playlist.component';
 import { SelectPlaylistComponent } from './select-playlist/select-playlist.component';
 import { UpsertPlaylistComponent } from './upsert-playlist/upsert-playlist.component';
@@ -20,6 +21,7 @@ import { UpsertPlaylistComponent } from './upsert-playlist/upsert-playlist.compo
 	declarations: [
 		AppComponent,
 		LoginComponent,
+		LogoutComponent,
 		FilterPlaylistComponent,
 		SelectPlaylistComponent,
 		UpsertPlaylistComponent

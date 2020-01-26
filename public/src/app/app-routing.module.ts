@@ -3,6 +3,7 @@ import { Routes, RouterModule } from '@angular/router';
 import { AngularFireAuthGuard, redirectLoggedInTo, redirectUnauthorizedTo } from '@angular/fire/auth-guard';
 
 import { LoginComponent } from './login/login.component';
+import { LogoutComponent } from './logout/logout.component';
 import { FilterPlaylistComponent } from './filter-playlist/filter-playlist.component';
 import { SelectPlaylistComponent } from './select-playlist/select-playlist.component';
 import { UpsertPlaylistComponent } from './upsert-playlist/upsert-playlist.component';
@@ -18,6 +19,10 @@ const routes: Routes = [
 		data: {
 			authGuardPipe: unauthorizedOnly
 		}
+	},
+	{
+		path: 'logout',
+		component: LogoutComponent
 	},
 	{
 		path: 'create',
