@@ -17,6 +17,7 @@ import { FilterPlaylistComponent } from './filter-playlist/filter-playlist.compo
 import { SelectPlaylistComponent } from './select-playlist/select-playlist.component';
 import { UpsertPlaylistComponent } from './upsert-playlist/upsert-playlist.component';
 import { SelectionComponent } from './selection/selection.component';
+import { ListItemComponent } from './list-item/list-item.component';
 
 @NgModule({
 	declarations: [
@@ -26,7 +27,8 @@ import { SelectionComponent } from './selection/selection.component';
 		FilterPlaylistComponent,
 		SelectPlaylistComponent,
 		UpsertPlaylistComponent,
-		SelectionComponent
+		SelectionComponent,
+		ListItemComponent
 	],
 	imports: [
 		BrowserModule,
