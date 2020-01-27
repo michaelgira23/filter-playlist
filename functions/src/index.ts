@@ -18,12 +18,16 @@ admin.initializeApp({
 	databaseURL: `https://${process.env.GCLOUD_PROJECT}.firebaseio.com`
 })
 
-// Initialize Spotify API
-const Spotify = new SpotifyWebApi({
-	clientId: functions.config().spotify.client_id,
-	clientSecret: functions.config().spotify.client_secret,
-	redirectUri: `${host}/login`
-});
+/**
+ * Initialize Spotify API. Don't use same instance so that access tokens are not mixed up on alternate requests.
+ */
+function spotifyFactory() {
+	return new SpotifyWebApi({
+		clientId: functions.config().spotify.client_id,
+		clientSecret: functions.config().spotify.client_secret,
+		redirectUri: `${host}/login`
+	});
+}
 
 // Scopes to request.
 const OAUTH_SCOPES = [
@@ -52,6 +56,7 @@ app.get('/login', (req, res) => {
 	// State ensures the same browser is logging in and receiving the token
 	const state = req.cookies.state || crypto.randomBytes(20).toString('hex');
 	res.cookie('state', state.toString(), { maxAge: 3600000, secure: true, httpOnly: true });
+	const Spotify = spotifyFactory();
 	const authorizeURL = Spotify.createAuthorizeURL(OAUTH_SCOPES, state.toString());
 	res.redirect(authorizeURL);
 });
@@ -64,8 +69,9 @@ app.post('/token', async (req, res, next) => {
 		if (!req.cookies.state) {
 			throw new Error('State cookie not set or expired. Maybe you took too long to authorize. Please try again.');
 		} else if (req.cookies.state !== req.body.state) {
-			throw new Error('State validation failed');
+			throw new Error('Invalid state! Please try again.');
 		}
+		const Spotify = spotifyFactory();
 		const authResult = await Spotify.authorizationCodeGrant(req.body.token);
 		Spotify.setAccessToken(authResult.body['access_token']);
 		const userResult = await Spotify.getMe();
@@ -90,6 +96,15 @@ app.post('/token', async (req, res, next) => {
 	}
 });
 
+/**
+ * Create or update Firebase account for user, given their Spotify info
+ * @param spotifyUserId Spotify ID
+ * @param email Email
+ * @param username Spotify username
+ * @param profilePic URL to Spotify profile picture. Optional.
+ * @param accessToken Spotify access token
+ * @param refreshToken Spotify refresh token
+ */
 async function createFirebaseAccount(spotifyUserId: string, email: string, username: string, profilePic: string | null, accessToken: string, refreshToken: string) {
 	const uid = `spotify:${spotifyUserId}`;
 
@@ -127,6 +142,39 @@ async function createFirebaseAccount(spotifyUserId: string, email: string, usern
 	// Create auth token for user to log into Firebase
 	return await admin.auth().createCustomToken(uid);
 }
+
+/**
+ * Get a total list of the user's Spotify playlists
+ */
+app.get('/playlists', async (req, res, next) => {
+	try {
+		// Get token from header
+		const token = req.get('Authorization')?.substring('Bearer '.length);
+		if (!token) throw new Error('No authorization token provided!');
+
+		// Get Firebase token and Spotify username
+		const decodedToken = await admin.auth().verifyIdToken(token);
+		const uid = decodedToken.uid;
+		const username = uid.substring('spotify:'.length);
+		console.log('spotify username', username);
+
+		// Get Spotify access and refresh tokens from database
+		const spotifyCredentials = await (await admin.firestore().collection('users').doc(uid).get()).data();
+		if (!spotifyCredentials) throw new Error('User\'s Spotify credentials not in database!');
+
+		// Get Spotify playlists
+		console.log('spotify', spotifyCredentials);
+		const Spotify = spotifyFactory();
+		Spotify.setAccessToken(spotifyCredentials.accessToken);
+		Spotify.setRefreshToken(spotifyCredentials.refreshToken);
+		const playlists = await Spotify.getUserPlaylists(username);
+
+		res.json({ playlists });
+	} catch (err) {
+		// Express cannot handle asynchronous promise rejections
+		next(err);
+	}
+});
 
 // Error handler
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

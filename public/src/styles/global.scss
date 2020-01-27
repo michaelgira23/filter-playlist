@@ -14,7 +14,7 @@ html {
 	font-size: 1.125rem;
 }
 
-h1, h2 ,h3 {
+h1, h2 , h3, input {
 	font-family: 'Cabin', sans-serif;
 	margin-top: 0;
 }
@@ -23,7 +23,7 @@ h1 {
 	font-size: 3rem;
 }
 
-h2 {
+h2, input {
 	font-size: 2.25rem;
 	margin-bottom: 1.75rem;
 }
@@ -35,6 +35,19 @@ h3 {
 
 p {
 	margin-bottom: 2.25rem;
+}
+
+input {
+	width: 100%;
+	margin: 0;
+	margin-bottom: 4.75rem;
+	padding: 0;
+
+	border: none;
+
+	&::placeholder {
+		@extend .placeholder;
+	}
 }
 
 .container {
@@ -76,7 +89,8 @@ p {
 .list-item {
 	@extend .inset;
 
-	margin-bottom: 4.75rem;
+	// margin-bottom: 4.75rem;
+	margin-bottom: 1.5rem;
 	padding: 2.25rem 5.5rem;
 
 	background: $gray;

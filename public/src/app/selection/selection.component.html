@@ -1,6 +1,19 @@
-<div class="selection-input list-item">
+<div class="selection-input list-item" (click)="showModal()">
 	<h2 [class.placeholder]="!selectedValue">
-		{{selectedValue ? selectedValue : 'Select ' + selectionLabel}}
+		{{selectedValue ? selectedValue : 'select ' + selectionLabel.toLowerCase()}}
 	</h2>
 	<fa-icon [icon]="faSortDown" class="placeholder"></fa-icon>
+</div>
+
+<div *ngIf="modal" class="modal">
+	<div class="container">
+		<h1>
+			<fa-icon [icon]="faTimes" class="close-modal" (click)="hideModal()"></fa-icon>
+			Select Your {{selectionLabel}}
+		</h1>
+		<input placeholder="search your playlists">
+		<div *ngFor="let result of searchResults" class="list-item">
+			<h2>{{result}}</h2>
+		</div>
+	</div>
 </div>

@@ -20,6 +20,8 @@ import { UpsertPlaylistComponent } from './upsert-playlist/upsert-playlist.compo
 import { SelectionComponent } from './selection/selection.component';
 import { ListItemComponent } from './list-item/list-item.component';
 
+import { SpotifyService } from './spotify.service';
+
 @NgModule({
 	declarations: [
 		AppComponent,
@@ -42,7 +44,9 @@ import { ListItemComponent } from './list-item/list-item.component';
 		AngularFireAuthModule,
 		AngularFireAuthGuardModule
 	],
-	providers: [],
+	providers: [
+		SpotifyService
+	],
 	bootstrap: [AppComponent]
 })
 export class AppModule { }

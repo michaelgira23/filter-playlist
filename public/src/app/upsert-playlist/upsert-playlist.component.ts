@@ -3,6 +3,8 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
 
+import { SpotifyService } from '../spotify.service';
+
 @Component({
 	selector: 'app-upsert-playlist',
 	templateUrl: './upsert-playlist.component.html',
@@ -12,7 +14,7 @@ export class UpsertPlaylistComponent implements OnInit {
 
 	filteredPlaylist$: Observable<any>;
 
-	constructor(private route: ActivatedRoute, private router: Router) { }
+	constructor(private route: ActivatedRoute, private router: Router, private spotify: SpotifyService) { }
 
 	ngOnInit() {
 		this.filteredPlaylist$ = this.route.paramMap.pipe(
@@ -20,6 +22,12 @@ export class UpsertPlaylistComponent implements OnInit {
 
 			// })
 			map(params => params.get('id'))
+		);
+
+		this.spotify.getPlaylists().subscribe(
+			playlists => {
+				console.log('playlists', playlists);
+			}
 		);
 	}
 
