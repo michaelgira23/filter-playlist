@@ -1,3 +1,5 @@
-<p>select-playlist works!</p>
-
-<p *ngFor="let playlist of filteredPlaylists | async">{{playlist | json}}</p>
+<div class="container">
+	<h1>Filter Playlist</h1>
+	<p *ngFor="let playlist of filteredPlaylists | async">{{playlist | json}}</p>
+	<button class="button" routerLink="/create">New Filtered Playlist</button>
+</div>
