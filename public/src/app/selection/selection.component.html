@@ -1,3 +1,6 @@
-<div class="list-item">
-	<h2 [class.placeholder]="!selectedValue">{{selectedValue ? selectedValue : 'Select ' + selectionLabel}}</h2>
+<div class="selection-input list-item">
+	<h2 [class.placeholder]="!selectedValue">
+		{{selectedValue ? selectedValue : 'Select ' + selectionLabel}}
+	</h2>
+	<fa-icon [icon]="faSortDown" class="placeholder"></fa-icon>
 </div>
