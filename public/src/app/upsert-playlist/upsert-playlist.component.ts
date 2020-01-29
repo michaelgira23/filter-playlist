@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
+import Fuse from 'fuse.js';
 import 'spotify-api';
 
 import { SpotifyService } from '../spotify.service';
@@ -14,7 +15,13 @@ import { SpotifyService } from '../spotify.service';
 export class UpsertPlaylistComponent implements OnInit {
 
 	filteredPlaylist$: Observable<any>;
+
 	playlists: SpotifyApi.PlaylistObjectSimplified[] = null;
+	searchPlaylistOptions: Fuse.FuseOptions<SpotifyApi.PlaylistObjectSimplified> = {
+		id: 'id',
+		keys: ['name', 'description']
+	};
+	searchPlaylists: Fuse<SpotifyApi.PlaylistObjectSimplified, any>;
 
 	constructor(private route: ActivatedRoute, private router: Router, private spotify: SpotifyService) { }
 
@@ -30,6 +37,7 @@ export class UpsertPlaylistComponent implements OnInit {
 			playlists => {
 				console.log('playlists', playlists);
 				this.playlists = playlists.playlists;
+				this.searchPlaylists = new Fuse(this.playlists, this.searchPlaylistOptions);
 			}
 		);
 	}

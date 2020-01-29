@@ -1,6 +1,7 @@
 import { Component, EventEmitter, HostListener, Input, OnInit, Output } from '@angular/core';
 import { faTimes } from '@fortawesome/pro-light-svg-icons';
 import { faSortDown } from '@fortawesome/pro-solid-svg-icons';
+import Fuse from 'fuse.js';
 
 @Component({
 	selector: 'app-selection',
@@ -13,10 +14,17 @@ export class SelectionComponent implements OnInit {
 	faTimes = faTimes;
 
 	@Input() selectionLabel: string;
-	@Input() searchResults: string[] = ['my last two brain cells', 'bepsi'];
+	@Input() search: Fuse<any, Fuse.FuseOptions<any>>;
+	@Input() displayKey: string;
 
-	@Output() inputValue = new EventEmitter<string>();
-	@Output() selectValue = new EventEmitter<string>();
+	@Input() value = '';
+
+	searchResults: any[] = [];
+
+	// @Input() searchResults: string[] = ['my last two brain cells', 'bepsi'];
+
+	// @Output() inputValue = new EventEmitter<string>();
+	// @Output() selectValue = new EventEmitter<string>();
 
 	modal = false;
 
@@ -32,6 +40,19 @@ export class SelectionComponent implements OnInit {
 	onKeyPress(event: KeyboardEvent) {
 		if (this.modal && event.key === 'Escape') {
 			this.hideModal();
+		}
+	}
+
+	onSearch(input: string) {
+		console.log('search', input);
+		if (this.search) {
+			const itemId = (this.search as any).options.id as string;
+			this.searchResults = (this.search.search(input) as string[]).map(resultId => {
+				const matchingItem = ((this.search as any).list as any[]).find(item => item[itemId] === resultId);
+				return matchingItem[this.displayKey];
+			});
+			// console.log('search results', this.searchResults, this.search);
+			// this.search.
 		}
 	}
 
