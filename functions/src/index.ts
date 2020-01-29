@@ -167,7 +167,29 @@ app.get('/playlists', async (req, res, next) => {
 		const Spotify = spotifyFactory();
 		Spotify.setAccessToken(spotifyCredentials.accessToken);
 		Spotify.setRefreshToken(spotifyCredentials.refreshToken);
-		const playlists = await Spotify.getUserPlaylists(username);
+
+		// Max amount of playlists we can get per API call
+		const MAX_PLAYLIST_LIMIT = 50;
+		// Cap offset at 100,000 because that's the API limit
+		const MAX_PLAYLIST_OFFSET = 100000;
+
+		let offset = 0;
+		let playlistTotal = MAX_PLAYLIST_LIMIT;
+		let playlists: any[] = [];
+
+		do {
+			if (offset > MAX_PLAYLIST_OFFSET) {
+				break;
+			}
+
+			const playlistData = await Spotify.getUserPlaylists({
+				offset,
+				limit: MAX_PLAYLIST_LIMIT
+			});
+			playlistTotal = playlistData.body.total;
+			playlists = [...playlists, ...playlistData.body.items];
+			offset += MAX_PLAYLIST_LIMIT;
+		} while (playlists.length < playlistTotal);
 
 		res.json({ playlists });
 	} catch (err) {
