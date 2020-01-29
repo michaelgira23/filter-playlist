@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
+import 'spotify-api';
 
 import { SpotifyService } from '../spotify.service';
 
@@ -13,6 +14,7 @@ import { SpotifyService } from '../spotify.service';
 export class UpsertPlaylistComponent implements OnInit {
 
 	filteredPlaylist$: Observable<any>;
+	playlists: SpotifyApi.PlaylistObjectSimplified[] = null;
 
 	constructor(private route: ActivatedRoute, private router: Router, private spotify: SpotifyService) { }
 
@@ -27,6 +29,7 @@ export class UpsertPlaylistComponent implements OnInit {
 		this.spotify.getPlaylists().subscribe(
 			playlists => {
 				console.log('playlists', playlists);
+				this.playlists = playlists.playlists;
 			}
 		);
 	}
