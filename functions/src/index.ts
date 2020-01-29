@@ -20,14 +20,47 @@ admin.initializeApp({
 
 /**
  * Initialize Spotify API. Don't use same instance so that access tokens are not mixed up on alternate requests.
+ * @param uid Firebase user UID. If set, will authenticate the Spotify instance.
  */
-function spotifyFactory() {
-	return new SpotifyWebApi({
+async function spotifyFactory(uid?: string) {
+	const Spotify = new SpotifyWebApi({
 		clientId: functions.config().spotify.client_id,
 		clientSecret: functions.config().spotify.client_secret,
 		redirectUri: `${host}/login`
 	});
+
+	if (uid) {
+		return await authenticateSpotify(Spotify, uid);
+	} else {
+		return Spotify;
+	}
 }
+
+/**
+ * Authenticate the Spotify object by setting tokens and optionally refreshing any expired access token
+ * @param Spotify Spotify instance
+ * @param uid
+ */
+async function authenticateSpotify(Spotify: SpotifyWebApi, uid: string) {
+	const credentialsDoc = admin.firestore().collection('users').doc(uid);
+	const credentials = await (await credentialsDoc.get()).data();
+	if (!credentials) throw new Error('User\'s Spotify credentials not in database!');
+
+	Spotify.setRefreshToken(credentials.refreshToken);
+	Spotify.setAccessToken(credentials.accessToken);
+
+	// Refresh access token if it expired (or will expire in 30 seconds)
+	if (credentials.expiresAt <= Date.now() - 30) {
+		const refreshResult = await Spotify.refreshAccessToken();
+		const accessToken = refreshResult.body['access_token'];
+		const expiresAt = Date.now() + refreshResult.body['expires_in'];
+		Spotify.setAccessToken(accessToken);
+		await credentialsDoc.update({ accessToken, expiresAt });
+	}
+
+	return Spotify;
+}
+
 
 // Scopes to request.
 const OAUTH_SCOPES = [
@@ -52,13 +85,18 @@ app.use(bodyParser.json());
 /**
  * Initial starting point for Spotify OAuth process
  */
-app.get('/login', (req, res) => {
-	// State ensures the same browser is logging in and receiving the token
-	const state = req.cookies.state || crypto.randomBytes(20).toString('hex');
-	res.cookie('state', state.toString(), { maxAge: 3600000, secure: true, httpOnly: true });
-	const Spotify = spotifyFactory();
-	const authorizeURL = Spotify.createAuthorizeURL(OAUTH_SCOPES, state.toString());
-	res.redirect(authorizeURL);
+app.get('/login', async (req, res, next) => {
+	try {
+		// State ensures the same browser is logging in and receiving the token
+		const state = req.cookies.state || crypto.randomBytes(20).toString('hex');
+		res.cookie('state', state.toString(), { maxAge: 3600000, secure: true, httpOnly: true });
+		const Spotify = await spotifyFactory();
+		const authorizeURL = Spotify.createAuthorizeURL(OAUTH_SCOPES, state.toString());
+		res.redirect(authorizeURL);
+	} catch (err) {
+		// Express cannot handle asynchronous promise rejections
+		next(err);
+	}
 });
 
 /**
@@ -71,7 +109,7 @@ app.post('/token', async (req, res, next) => {
 		} else if (req.cookies.state !== req.body.state) {
 			throw new Error('Invalid state! Please try again.');
 		}
-		const Spotify = spotifyFactory();
+		const Spotify = await spotifyFactory();
 		const authResult = await Spotify.authorizationCodeGrant(req.body.token);
 		Spotify.setAccessToken(authResult.body['access_token']);
 		const userResult = await Spotify.getMe();
@@ -86,8 +124,9 @@ app.post('/token', async (req, res, next) => {
 			userResult.body['email'],
 			userResult.body['display_name'] as string,
 			profilePic,
+			authResult.body['refresh_token'],
 			authResult.body['access_token'],
-			authResult.body['refresh_token']
+			Date.now() + authResult.body['expires_in']
 		);
 		res.json({ token: firebaseToken });
 	} catch (err) {
@@ -102,15 +141,17 @@ app.post('/token', async (req, res, next) => {
  * @param email Email
  * @param username Spotify username
  * @param profilePic URL to Spotify profile picture. Optional.
- * @param accessToken Spotify access token
  * @param refreshToken Spotify refresh token
+ * @param accessToken Spotify access token
+ * @param expiresAt Timestamp that the access token expires
  */
-async function createFirebaseAccount(spotifyUserId: string, email: string, username: string, profilePic: string | null, accessToken: string, refreshToken: string) {
+async function createFirebaseAccount(spotifyUserId: string, email: string, username: string, profilePic: string | null, refreshToken: string, accessToken: string, expiresAt: number) {
 	const uid = `spotify:${spotifyUserId}`;
 
 	const tokenDoc = {
+		refreshToken,
 		accessToken,
-		refreshToken
+		expiresAt
 	};
 
 	const userData: any = {
@@ -155,18 +196,9 @@ app.get('/playlists', async (req, res, next) => {
 		// Get Firebase token and Spotify username
 		const decodedToken = await admin.auth().verifyIdToken(token);
 		const uid = decodedToken.uid;
-		const username = uid.substring('spotify:'.length);
-		console.log('spotify username', username);
-
-		// Get Spotify access and refresh tokens from database
-		const spotifyCredentials = await (await admin.firestore().collection('users').doc(uid).get()).data();
-		if (!spotifyCredentials) throw new Error('User\'s Spotify credentials not in database!');
 
 		// Get Spotify playlists
-		console.log('spotify', spotifyCredentials);
-		const Spotify = spotifyFactory();
-		Spotify.setAccessToken(spotifyCredentials.accessToken);
-		Spotify.setRefreshToken(spotifyCredentials.refreshToken);
+		const Spotify = await spotifyFactory(uid);
 
 		// Max amount of playlists we can get per API call
 		const MAX_PLAYLIST_LIMIT = 50;
