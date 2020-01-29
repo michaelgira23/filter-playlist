@@ -50,6 +50,10 @@ input {
 	}
 }
 
+button {
+	cursor: pointer;
+}
+
 .container {
 	width: 100%;
 	max-width: 48rem;
@@ -58,7 +62,7 @@ input {
 }
 
 .inset {
-	width: calc(100% + $inset-margin * 2);
+	width: calc(100% + #{$inset-margin * 2});
 	margin-left: -$inset-margin;
 	margin-right: -$inset-margin;
 }
@@ -89,12 +93,26 @@ input {
 .list-item {
 	@extend .inset;
 
-	// margin-bottom: 4.75rem;
+	// width: 100%;
 	margin-bottom: 1.5rem;
 	padding: 2.25rem 5.5rem;
+	text-align: left;
 
 	background: $gray;
 	border-radius: $border-radius;
+	border: none;
+
+	transition-duration: 250ms;
+	transition-timing-function: ease-out;
+
+	&:hover {
+		background: $slightly-light-dark-gray;
+	}
+
+	&:focus {
+		color: $black;
+		background: $light-gray;
+	}
 
 	h2 {
 		margin: 0;

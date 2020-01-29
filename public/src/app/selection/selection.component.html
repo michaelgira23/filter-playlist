@@ -12,8 +12,13 @@
 			Select Your {{selectionLabel}}
 		</h1>
 		<input placeholder="search your playlists" [(value)]="value" (input)="onSearch($event.target.value)">
-		<div *ngFor="let result of searchResults" class="list-item">
-			<h2>{{result}}</h2>
-		</div>
+		<ng-container *ngIf="searchResults.length > 0; else empty">
+			<button *ngFor="let result of searchResults" class="list-item" (click)="onSelect(result)">
+				<h2>{{result[displayKey]}}</h2>
+			</button>
+		</ng-container>
+		<ng-template #empty>
+			<h2>{{emptyMessage}}</h2>
+		</ng-template>
 	</div>
 </div>

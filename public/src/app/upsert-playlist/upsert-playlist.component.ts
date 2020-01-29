@@ -18,7 +18,7 @@ export class UpsertPlaylistComponent implements OnInit {
 
 	playlists: SpotifyApi.PlaylistObjectSimplified[] = null;
 	searchPlaylistOptions: Fuse.FuseOptions<SpotifyApi.PlaylistObjectSimplified> = {
-		id: 'id',
+		// id: 'id',
 		keys: ['name', 'description']
 	};
 	searchPlaylists: Fuse<SpotifyApi.PlaylistObjectSimplified, any>;
@@ -40,6 +40,10 @@ export class UpsertPlaylistComponent implements OnInit {
 				this.searchPlaylists = new Fuse(this.playlists, this.searchPlaylistOptions);
 			}
 		);
+	}
+
+	onSelectSource(source: SpotifyApi.PlaylistObjectSimplified) {
+		console.log('select playlist', source);
 	}
 
 }
