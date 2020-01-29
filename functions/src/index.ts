@@ -42,7 +42,7 @@ async function spotifyFactory(uid?: string) {
  * @param uid
  */
 async function authenticateSpotify(Spotify: SpotifyWebApi, uid: string) {
-	const credentialsDoc = admin.firestore().collection('users').doc(uid);
+	const credentialsDoc = admin.firestore().collection('spotifyCredentials').doc(uid);
 	const credentials = await (await credentialsDoc.get()).data();
 	if (!credentials) throw new Error('User\'s Spotify credentials not in database!');
 
@@ -50,15 +50,24 @@ async function authenticateSpotify(Spotify: SpotifyWebApi, uid: string) {
 	Spotify.setAccessToken(credentials.accessToken);
 
 	// Refresh access token if it expired (or will expire in 30 seconds)
-	if (credentials.expiresAt <= Date.now() - 30) {
+	console.log('expires in', credentials.expiresAt - currentTimestamp());
+	if (currentTimestamp() >= credentials.expiresAt - 30) {
 		const refreshResult = await Spotify.refreshAccessToken();
 		const accessToken = refreshResult.body['access_token'];
-		const expiresAt = Date.now() + refreshResult.body['expires_in'];
+		const expiresAt = currentTimestamp() + refreshResult.body['expires_in'];
+		console.log('expires in', refreshResult.body['expires_in'], expiresAt - Date.now());
 		Spotify.setAccessToken(accessToken);
 		await credentialsDoc.update({ accessToken, expiresAt });
 	}
 
 	return Spotify;
+}
+
+/**
+ * Return current timestamp in seconds
+ */
+function currentTimestamp() {
+	return Math.floor(Date.now() / 1000);
 }
 
 
@@ -126,7 +135,7 @@ app.post('/token', async (req, res, next) => {
 			profilePic,
 			authResult.body['refresh_token'],
 			authResult.body['access_token'],
-			Date.now() + authResult.body['expires_in']
+			currentTimestamp() + authResult.body['expires_in']
 		);
 		res.json({ token: firebaseToken });
 	} catch (err) {
@@ -165,7 +174,7 @@ async function createFirebaseAccount(spotifyUserId: string, email: string, usern
 
 	await Promise.all([
 		// Save Spotify API tokens in database
-		admin.firestore().collection('users').doc(uid).set(tokenDoc),
+		admin.firestore().collection('spotifyCredentials').doc(uid).set(tokenDoc),
 		// Add corresponding Firebase auth account
 		admin.auth().updateUser(uid, userData)
 			// If error, user does not exist. Create a new user.
