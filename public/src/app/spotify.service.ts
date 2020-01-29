@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpHeaders, HttpClient } from '@angular/common/http';
 import { AngularFireAuth } from '@angular/fire/auth';
 import { from } from 'rxjs';
+import 'spotify-api';
 
 import { environment } from '../environments/environment';
 import { map, switchMap } from 'rxjs/operators';
@@ -15,7 +16,9 @@ export class SpotifyService {
 
 	getPlaylists() {
 		return this.generateOptions().pipe(
-			switchMap(options => this.http.get(`${environment.firebaseFunctionsHost}/widgets/playlists`, options))
+			switchMap(options =>
+				this.http.get<GetPlaylistsResponse>(`${environment.firebaseFunctionsHost}/widgets/playlists`, options)
+			)
 		);
 	}
 
@@ -29,4 +32,8 @@ export class SpotifyService {
 			}))
 		);
 	}
+}
+
+interface GetPlaylistsResponse {
+	playlists: SpotifyApi.PlaylistObjectSimplified[];
 }
