@@ -28,7 +28,7 @@ export class SelectionComponent implements OnInit {
 	}
 	set search(fuse) {
 		this._search = fuse;
-		this.onSearch(this.value);
+		this.refreshSearch();
 	}
 	// tslint:disable-next-line: variable-name
 	private _search: Fuse<any, Fuse.FuseOptions<any>>;
@@ -42,6 +42,7 @@ export class SelectionComponent implements OnInit {
 	selectedValue: string = null;
 
 	modal = false;
+	private focusResult: any = null;
 
 	constructor() { }
 
@@ -59,7 +60,9 @@ export class SelectionComponent implements OnInit {
 				// Select first option on enter
 				case 'Enter':
 					console.log('enter');
-					if (this.searchResults.length >= 1) {
+					if (this.focusResult) {
+						this.onSelect(this.focusResult);
+					} else if (this.searchResults.length >= 1) {
 						this.onSelect(this.searchResults[0]);
 					} else {
 						this.hideModal();
@@ -69,15 +72,12 @@ export class SelectionComponent implements OnInit {
 		}
 	}
 
-	onSearch(input: string) {
-		console.log('search', input);
-		if (this.search) {
-			// const itemId = (this.search as any).options.id as string;
-			// this.searchResults = (this.search.search(input) as string[]).map(resultId => {
-			// 	const matchingItem = ((this.search as any).list as any[]).find(item => item[itemId] === resultId);
-			// 	return matchingItem;
-			// });
+	refreshSearch() {
+		this.onSearch(this.value);
+	}
 
+	onSearch(input: string) {
+		if (this.search) {
 			this.searchResults = this.search.search(input);
 		}
 	}
@@ -87,6 +87,15 @@ export class SelectionComponent implements OnInit {
 		this.selectedValue = result[this.displayKey];
 		this.selectValue.emit(result);
 		this.hideModal();
+		this.refreshSearch();
+	}
+
+	onFocus(result: any) {
+		this.focusResult = result;
+	}
+
+	onUnfocus() {
+		this.focusResult = null;
 	}
 
 	showModal() {

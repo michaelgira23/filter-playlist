@@ -18,7 +18,6 @@ export class UpsertPlaylistComponent implements OnInit {
 
 	playlists: SpotifyApi.PlaylistObjectSimplified[] = null;
 	searchPlaylistOptions: Fuse.FuseOptions<SpotifyApi.PlaylistObjectSimplified> = {
-		// id: 'id',
 		keys: ['name', 'description']
 	};
 	searchPlaylists: Fuse<SpotifyApi.PlaylistObjectSimplified, any>;
