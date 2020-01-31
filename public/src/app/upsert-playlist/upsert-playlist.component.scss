@@ -1,0 +1,29 @@
+.header-input {
+	transition-duration: 100ms;
+	transition-timing-function: ease-out;
+	transform: translateY(25%);
+
+	/**
+	* Normal styles when there is text
+	*/
+	&:focus,
+	&:not(:placeholder-shown) {
+		transform: translateY(0);
+
+		& + .show-optional-input {
+			transform: translateY(0);
+			opacity: 1;
+			pointer-events: all;
+		}
+	}
+}
+
+.show-optional-input {
+	transition-duration: 100ms;
+	transition-timing-function: ease-out;
+	transition-property: transform, opacity;
+
+	transform: translateY(-50%);
+	opacity: 0;
+	pointer-events: none;
+}

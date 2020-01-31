@@ -1,6 +1,9 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
+import { ReactiveFormsModule } from '@angular/forms';
+import { DragDropModule } from '@angular/cdk/drag-drop';
+import { TextFieldModule } from '@angular/cdk/text-field';
 import { AngularFireModule } from '@angular/fire';
 import { AngularFireAnalyticsModule } from '@angular/fire/analytics';
 import { AngularFirestoreModule } from '@angular/fire/firestore';
@@ -37,6 +40,9 @@ import { SpotifyService } from './spotify.service';
 		BrowserModule,
 		AppRoutingModule,
 		HttpClientModule,
+		ReactiveFormsModule,
+		DragDropModule,
+		TextFieldModule,
 		FontAwesomeModule,
 		AngularFireModule.initializeApp(environment.firebase),
 		AngularFireAnalyticsModule,

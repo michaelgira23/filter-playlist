@@ -1,8 +1,22 @@
 <div class="container">
 	<h1>Filter Playlist</h1>
-	<h2>Source Playlist</h2>
-	<app-selection selectionLabel="Playlist" [search]="searchPlaylists" (selectValue)="onSelectSource($event)"
-		displayKey="name">
-	</app-selection>
-	<button class="button">Create</button>
+	<form [formGroup]="form" (ngSubmit)="save()">
+		<h2>Source Playlist</h2>
+		<app-selection selectionLabel="Playlist" [search]="searchPlaylists" (selectValue)="onSelectSource($event)"
+			displayKey="name">
+		</app-selection>
+		<h2>Criteria</h2>
+		<ng-container formArrayName='criteria'>
+			<div *ngFor="let criterion of formCriteria.controls; let i = index;" class="list-item" [formGroupName]="i">
+				<input class="header-input" placeholder="add criteria" formControlName="purpose">
+				<textarea #autosize="cdkTextareaAutosize" class="subheader-input show-optional-input"
+					placeholder="optionally, add description" formControlName="description"
+					(input)="autosize.resizeToFitContent(true)" cdkTextareaAutosize
+					style.fontSize="1.125rem"></textarea>
+			</div>
+		</ng-container>
+		<h2>Actions</h2>
+		<h2>Collaborators</h2>
+		<button class="button">Create</button>
+	</form>
 </div>

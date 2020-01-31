@@ -11,7 +11,8 @@
 			<fa-icon [icon]="faTimes" class="close-modal" (click)="hideModal()"></fa-icon>
 			Select Your {{selectionLabel}}
 		</h1>
-		<input placeholder="search your playlists" [(value)]="value" (input)="onSearch($event.target.value)">
+		<input class="header-input search-input" placeholder="search your playlists" [(value)]="value"
+			(input)="onSearch($event.target.value)">
 		<ng-container *ngIf="searchResults.length > 0; else empty">
 			<button *ngFor="let result of searchResults" class="list-item" (click)="onSelect(result)"
 				(focus)="onFocus(result)" (blur)="onUnfocus()">

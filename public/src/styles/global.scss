@@ -14,7 +14,7 @@ html {
 	font-size: 1.125rem;
 }
 
-h1, h2 , h3, input {
+h1, h2 , h3, .header-input {
 	font-family: 'Cabin', sans-serif;
 	margin-top: 0;
 }
@@ -23,7 +23,7 @@ h1 {
 	font-size: 3rem;
 }
 
-h2, input {
+h2, .header-input {
 	font-size: 2.25rem;
 	margin-bottom: 1.75rem;
 }
@@ -35,19 +35,6 @@ h3 {
 
 p {
 	margin-bottom: 2.25rem;
-}
-
-input {
-	width: 100%;
-	margin: 0;
-	margin-bottom: 4.75rem;
-	padding: 0;
-
-	border: none;
-
-	&::placeholder {
-		@extend .placeholder;
-	}
 }
 
 button {
@@ -88,6 +75,32 @@ button {
 	font-size: 2.25rem;
 	font-weight: bold;
 	text-transform: uppercase;
+}
+
+.header-input {
+	width: 100%;
+	margin: 0;
+	padding: 0;
+
+	border: none;
+
+	&::placeholder {
+		@extend .placeholder;
+	}
+}
+
+.subheader-input {
+	width: 100%;
+	margin: 0;
+	padding: 0;
+
+	resize: none;
+	overflow: hidden;
+	border: none;
+
+	&::placeholder {
+		@extend .placeholder;
+	}
 }
 
 .list-item {
