@@ -7,7 +7,8 @@
 	* Normal styles when there is text
 	*/
 	&:focus,
-	&:not(:placeholder-shown) {
+	&:not(:placeholder-shown),
+	&.show-inputs {
 		transform: translateY(0);
 
 		& + .show-optional-input {

@@ -8,11 +8,10 @@
 		<h2>Criteria</h2>
 		<ng-container formArrayName='criteria'>
 			<div *ngFor="let criterion of formCriteria.controls; let i = index;" class="list-item" [formGroupName]="i">
-				<input class="header-input" placeholder="add criteria" formControlName="purpose">
-				<textarea #autosize="cdkTextareaAutosize" class="subheader-input show-optional-input"
-					placeholder="optionally, add description" formControlName="description"
-					(input)="autosize.resizeToFitContent(true)" cdkTextareaAutosize
-					style.fontSize="1.125rem"></textarea>
+				<input class="header-input" [class.show-inputs]="criterion.value.description" placeholder="add criteria"
+					formControlName="purpose">
+				<textarea class="subheader-input show-optional-input" placeholder="optionally, add description"
+					formControlName="description" cdkTextareaAutosize style.fontSize="1.125rem"></textarea>
 			</div>
 		</ng-container>
 		<h2>Actions</h2>
