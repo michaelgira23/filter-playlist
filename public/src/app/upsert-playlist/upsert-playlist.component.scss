@@ -1,6 +1,7 @@
-.header-input {
-	transition-duration: 100ms;
-	transition-timing-function: ease-out;
+@import '../../styles/constants';
+
+.show-optional-header {
+	transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
 	transform: translateY(25%);
 
 	/**
@@ -11,7 +12,7 @@
 	&.show-inputs {
 		transform: translateY(0);
 
-		& + .show-optional-input {
+		& + .show-optional-subheader {
 			transform: translateY(0);
 			opacity: 1;
 			pointer-events: all;
@@ -19,12 +20,61 @@
 	}
 }
 
-.show-optional-input {
-	transition-duration: 100ms;
-	transition-timing-function: ease-out;
-	transition-property: transform, opacity;
-
+.show-optional-subheader {
+	transition: transform, opacity 250ms cubic-bezier(0, 0, 0.2, 1);
 	transform: translateY(-50%);
 	opacity: 0;
 	pointer-events: none;
+}
+
+.criteria-item {
+	width: 100%;
+	display: flex;
+	// flex-direction: column;
+	// justify-content: center;
+	align-items: center;
+	// margin: 0;
+	margin-left: 0;
+	margin-right: 0;
+}
+
+.drag-criteria {
+	width: $inset-margin;
+	position: absolute;
+	font-size: 2.25rem;
+	transform: translateX(-100%);
+	// z-index: 100;
+
+	display: flex;
+	justify-content: center;
+
+	opacity: 1;
+
+	&.hide {
+		opacity: 0;
+	}
+}
+
+// The criteria currently being dragged
+.cdk-drag-preview {
+	// box-sizing: border-box;
+	// border-radius: 4px;
+	box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2),
+				0 8px 10px 1px rgba(0, 0, 0, 0.14),
+				0 3px 14px 2px rgba(0, 0, 0, 0.12);
+}
+
+// Where the critera previously was
+.cdk-drag-placeholder {
+	opacity: 0;
+}
+
+// When the criteria is being dragged and is released
+.cdk-drag-animating {
+	transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+// The other criteria while one of them is being dragged
+.criteria-container.cdk-drop-list-dragging .criteria-item:not(.cdk-drag-placeholder) {
+	transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
 }

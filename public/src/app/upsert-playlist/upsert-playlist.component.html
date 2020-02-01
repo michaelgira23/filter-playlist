@@ -6,14 +6,21 @@
 			displayKey="name">
 		</app-selection>
 		<h2>Criteria</h2>
-		<ng-container formArrayName='criteria'>
-			<div *ngFor="let criterion of formCriteria.controls; let i = index;" class="list-item" [formGroupName]="i">
-				<input class="header-input" [class.show-inputs]="criterion.value.description" placeholder="add criteria"
-					formControlName="purpose" (input)="onCriteriaChange()">
-				<textarea class="subheader-input show-optional-input" placeholder="optionally, add description"
-					formControlName="description" cdkTextareaAutosize (input)="onCriteriaChange()"></textarea>
+		<div formArrayName='criteria' class="criteria-container inset" cdkDropList
+			(cdkDropListDropped)="reorderCriteria($event)">
+			<div *ngFor="let criterion of formCriteria.controls; let i = index;" class="list-item criteria-item"
+				[formGroupName]="i" cdkDrag cdkDragLockAxis="y">
+				<div class="drag-criteria" [class.hide]="formCriteria.controls.length === 1">
+					<fa-icon [icon]="faBars" cdkDragHandle></fa-icon>
+				</div>
+				<div class="input-container">
+					<input class="header-input show-optional-header" [class.show-inputs]="criterion.value.description"
+						placeholder="add criteria" formControlName="purpose" (input)="onCriteriaChange()">
+					<textarea class="subheader-input show-optional-subheader" placeholder="optionally, add description"
+						formControlName="description" cdkTextareaAutosize (input)="onCriteriaChange()"></textarea>
+				</div>
 			</div>
-		</ng-container>
+		</div>
 		<h2>Actions</h2>
 		<h2>Collaborators</h2>
 		<button class="button">Create</button>

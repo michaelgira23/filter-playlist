@@ -117,6 +117,7 @@ button {
 
 	transition-duration: 250ms;
 	transition-timing-function: ease-out;
+	transition-property: background, color;
 
 	&:hover {
 		background: $slightly-light-dark-gray;

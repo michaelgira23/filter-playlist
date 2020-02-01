@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { FormBuilder, FormArray, Validators } from '@angular/forms';
+import { FormBuilder, FormArray, Validators, FormGroup } from '@angular/forms';
+import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Observable } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
+import { faBars } from '@fortawesome/pro-light-svg-icons';
 import Fuse from 'fuse.js';
 import 'spotify-api';
 
@@ -15,6 +17,8 @@ import { SpotifyService } from '../spotify.service';
 	styleUrls: ['./upsert-playlist.component.scss']
 })
 export class UpsertPlaylistComponent implements OnInit {
+
+	faBars = faBars;
 
 	filteredPlaylist$: Observable<any>;
 
@@ -59,7 +63,6 @@ export class UpsertPlaylistComponent implements OnInit {
 	}
 
 	onCriteriaChange() {
-		console.log('criteria change');
 		this.ensureOneExtraCriteria();
 	}
 
@@ -75,6 +78,11 @@ export class UpsertPlaylistComponent implements OnInit {
 			criteria.splice(criteria.length - 1, 1);
 			this.ensureOneExtraCriteria();
 		}
+	}
+
+	reorderCriteria(event: CdkDragDrop<FormGroup>) {
+		console.log('move item from', event.previousIndex, 'to', event.currentIndex);
+		moveItemInArray(this.formCriteria.controls, event.previousIndex, event.currentIndex);
 	}
 
 	save() {
