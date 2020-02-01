@@ -2,11 +2,11 @@
 	<h1>Filter Playlist</h1>
 	<form [formGroup]="form" (ngSubmit)="save()">
 		<h2>Source Playlist</h2>
-		<app-selection selectionLabel="Playlist" [search]="searchPlaylists" (selectValue)="onSelectSource($event)"
-			displayKey="name">
+		<app-selection class="section-container" selectionLabel="Playlist" [search]="searchPlaylists"
+			(selectValue)="onSelectSource($event)" displayKey="name">
 		</app-selection>
 		<h2>Criteria</h2>
-		<div formArrayName='criteria' class="criteria-container inset" cdkDropList
+		<div formArrayName='criteria' class="section-container inset criteria-container inset" cdkDropList
 			(cdkDropListDropped)="reorderCriteria($event)">
 			<div *ngFor="let criterion of formCriteria.controls; let i = index;" class="list-item criteria-item"
 				[formGroupName]="i" cdkDrag cdkDragLockAxis="y">
