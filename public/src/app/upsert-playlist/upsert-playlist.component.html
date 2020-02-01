@@ -9,9 +9,9 @@
 		<ng-container formArrayName='criteria'>
 			<div *ngFor="let criterion of formCriteria.controls; let i = index;" class="list-item" [formGroupName]="i">
 				<input class="header-input" [class.show-inputs]="criterion.value.description" placeholder="add criteria"
-					formControlName="purpose">
+					formControlName="purpose" (input)="onCriteriaChange()">
 				<textarea class="subheader-input show-optional-input" placeholder="optionally, add description"
-					formControlName="description" cdkTextareaAutosize style.fontSize="1.125rem"></textarea>
+					formControlName="description" cdkTextareaAutosize (input)="onCriteriaChange()"></textarea>
 			</div>
 		</ng-container>
 		<h2>Actions</h2>

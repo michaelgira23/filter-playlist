@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { FormBuilder, FormArray } from '@angular/forms';
+import { FormBuilder, FormArray, Validators } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
 import Fuse from 'fuse.js';
@@ -58,15 +58,34 @@ export class UpsertPlaylistComponent implements OnInit {
 		console.log('select playlist', source);
 	}
 
+	onCriteriaChange() {
+		console.log('criteria change');
+		this.ensureOneExtraCriteria();
+	}
+
+	ensureOneExtraCriteria() {
+		const criteria = this.formCriteria.controls;
+		const secondToLastCriterion = criteria[criteria.length - 2];
+		const lastCriterion = criteria[criteria.length - 1];
+		if (lastCriterion && lastCriterion.valid) {
+			// Criteria all filled up; add another
+			this.addCriteria();
+		} else if (secondToLastCriterion && secondToLastCriterion.invalid) {
+			// Both last and second to last are invalid; delete the last one
+			criteria.splice(criteria.length - 1, 1);
+			this.ensureOneExtraCriteria();
+		}
+	}
+
 	save() {
 		console.log('Save playlist!', this.form.value);
 	}
 
-	addCriteria() {
+	addCriteria(purpose?: string, description?: string) {
 		this.formCriteria.push(
 			this.fb.group({
-				purpose: [''],
-				description: ['']
+				purpose: [purpose || '', Validators.required],
+				description: [description || '']
 			})
 		);
 	}
