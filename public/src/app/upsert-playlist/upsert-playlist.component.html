@@ -10,9 +10,9 @@
 			(cdkDropListDropped)="reorderCriteria($event)">
 			<div *ngFor="let criterion of formCriteria.controls; let i = index;" class="list-item criteria-item"
 				[formGroupName]="i" cdkDrag cdkDragLockAxis="y"
-				[cdkDragDisabled]="formCriteria.controls.length === 1 || (criterion.invalid && i === formCriteria.controls.length - 1)">
+				[cdkDragDisabled]="formCriteria.controls.length <= 2 || (criterion.invalid && i === formCriteria.controls.length - 1)">
 				<div class="drag-criteria"
-					[class.hide]="formCriteria.controls.length === 1 || (criterion.invalid && i === formCriteria.controls.length - 1)"
+					[class.hide]="formCriteria.controls.length <= 2 || (criterion.invalid && i === formCriteria.controls.length - 1)"
 					cdkDragHandle>
 					<fa-icon [icon]="faBars"></fa-icon>
 				</div>
@@ -26,7 +26,10 @@
 		</div>
 		<h2>Actions</h2>
 		<div formArrayName="actions" class="section-container">
-			<div *ngFor="let action of formActions.controls; let i = index;">
+			<div *ngFor="let action of formActions.controls; let i = index;" class="list-item action-item no-hover">
+				<div class="delete-container">
+					<fa-icon [icon]="faTrashAlt" [fixedWidth]="true" (click)="deleteAction(i)"></fa-icon>
+				</div>
 				<app-playlist-action [searchPlaylists]="searchPlaylists"></app-playlist-action>
 			</div>
 			<div class="list-item add-action" (click)="addDefaultAction()">

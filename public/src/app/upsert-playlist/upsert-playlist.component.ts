@@ -4,7 +4,7 @@ import { FormBuilder, FormArray, Validators, FormGroup } from '@angular/forms';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Observable } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
-import { faBars } from '@fortawesome/pro-light-svg-icons';
+import { faBars, faTrashAlt } from '@fortawesome/pro-light-svg-icons';
 import Fuse from 'fuse.js';
 import 'spotify-api';
 
@@ -20,6 +20,7 @@ import { SpotifyService } from '../spotify.service';
 export class UpsertPlaylistComponent implements OnInit {
 
 	faBars = faBars;
+	faTrashAlt = faTrashAlt;
 
 	filteredPlaylist$: Observable<any>;
 
@@ -115,6 +116,10 @@ export class UpsertPlaylistComponent implements OnInit {
 				id: null
 			}
 		});
+	}
+
+	deleteAction(index: number) {
+		this.formActions.controls.splice(index, 1);
 	}
 
 	addAction(action: Action) {

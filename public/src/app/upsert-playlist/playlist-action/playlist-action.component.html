@@ -1,22 +1,20 @@
-<div class="list-item action-item no-hover">
-	<h2>
-		if
-		<select [(ngModel)]="action.if.type">
-			<option [value]="ActionIfType.ALL_PASSED">all criteria passed</option>
-			<option [value]="ActionIfType.ALL_FAILED">all criteria failed</option>
-			<option [value]="ActionIfType.ANY_PASSED">any criteria passed</option>
-			<option [value]="ActionIfType.ANY_FAILED">any criteria failed</option>
-			<!-- <option>specific criteria passed</option>
+<h2>
+	if
+	<select [(ngModel)]="action.if.type">
+		<option [value]="ActionIfType.ALL_PASSED">all criteria passed</option>
+		<option [value]="ActionIfType.ALL_FAILED">all criteria failed</option>
+		<option [value]="ActionIfType.ANY_PASSED">any criteria passed</option>
+		<option [value]="ActionIfType.ANY_FAILED">any criteria failed</option>
+		<!-- <option>specific criteria passed</option>
 			<option>specific criteria failed</option> -->
-		</select>
-		then
-		<select [(ngModel)]="action.then.type">
-			<option [value]="ActionThenType.ADD_TO_PLAYLIST">add to playlist</option>
-			<option [value]="ActionThenType.REMOVE_FROM_CURRENT_PLAYLIST">remove from current playlist</option>
-		</select>
-		<app-selection *ngIf="action.then.type === ActionThenType.ADD_TO_PLAYLIST" selectionLabel="Playlist"
-			[create]="true" [onCreate]="createPlaylist.bind(this)" [search]="searchPlaylists"
-			[value]="thenPlaylist?.name || ''" (selectValue)="onThenPlaylistSelected($event)" displayKey="name">
-		</app-selection>
-	</h2>
-</div>
+	</select>
+	then
+	<select [(ngModel)]="action.then.type">
+		<option [value]="ActionThenType.ADD_TO_PLAYLIST">add to playlist</option>
+		<option [value]="ActionThenType.REMOVE_FROM_CURRENT_PLAYLIST">remove from current playlist</option>
+	</select>
+	<app-selection *ngIf="action.then.type === ActionThenType.ADD_TO_PLAYLIST" selectionLabel="Playlist" [create]="true"
+		[onCreate]="createPlaylist.bind(this)" [search]="searchPlaylists" [value]="thenPlaylist?.name || ''"
+		(selectValue)="onThenPlaylistSelected($event)" displayKey="name">
+	</app-selection>
+</h2>

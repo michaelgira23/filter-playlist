@@ -85,6 +85,21 @@
 	transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
 }
 
+.action-item {
+	padding-bottom: 0;
+
+	.delete-container {
+		width: $inset-margin;
+		position: absolute;
+		top: 2.9rem;
+		font-size: 2rem;
+		transform: translateX(-100%);
+
+		display: flex;
+		justify-content: center;
+	}
+}
+
 .add-action {
 	cursor: pointer;
 }
