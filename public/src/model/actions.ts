@@ -20,7 +20,7 @@ interface ActionIfBase {
 	type: Omit<ActionIfType, ActionIfType.CRITERIA_N_PASSED | ActionIfType.CRITERIA_N_FAILED>;
 }
 
-interface ActionIfCriteria extends ActionIfBase {
+export interface ActionIfCriteria extends ActionIfBase {
 	type: ActionIfType.CRITERIA_N_PASSED | ActionIfType.CRITERIA_N_FAILED;
 	id: string;
 }

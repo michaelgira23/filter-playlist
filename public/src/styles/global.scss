@@ -106,7 +106,7 @@ button {
 .list-item {
 	@extend .inset;
 
-	// width: 100%;
+	position: relative;
 	margin-bottom: 1.5rem;
 	padding: 2.25rem 5.5rem;
 	text-align: left;

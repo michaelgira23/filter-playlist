@@ -1,4 +1,4 @@
-<div class="list-item no-hover">
+<div class="list-item action-item no-hover">
 	<h2>
 		if
 		<select [(ngModel)]="action.if.type">
@@ -19,5 +19,4 @@
 			[value]="thenPlaylist?.name || ''" (selectValue)="onThenPlaylistSelected($event)" displayKey="name">
 		</app-selection>
 	</h2>
-	{{action | json}}
 </div>

@@ -8,6 +8,7 @@ import { faBars } from '@fortawesome/pro-light-svg-icons';
 import Fuse from 'fuse.js';
 import 'spotify-api';
 
+import { Action, ActionIfType, ActionIfCriteria, ActionThenAddToPlaylist, ActionThenType } from '../../model/actions';
 import { FilteredPlaylist } from '../../model/filtered-playlist';
 import { SpotifyService } from '../spotify.service';
 
@@ -30,17 +31,23 @@ export class UpsertPlaylistComponent implements OnInit {
 
 	form = this.fb.group({
 		originId: [''],
-		criteria: this.fb.array([])
+		criteria: this.fb.array([]),
+		actions: this.fb.array([])
 	});
 
 	get formCriteria() {
 		return this.form.get('criteria') as FormArray;
 	}
 
+	get formActions() {
+		return this.form.get('actions') as FormArray;
+	}
+
 	constructor(private route: ActivatedRoute, private router: Router, private fb: FormBuilder, private spotify: SpotifyService) { }
 
 	ngOnInit() {
 		this.addCriteria();
+		this.addDefaultAction();
 
 		this.filteredPlaylist$ = this.route.paramMap.pipe(
 			// switchMap((params: ParamMap) => {
@@ -94,6 +101,29 @@ export class UpsertPlaylistComponent implements OnInit {
 			this.fb.group({
 				purpose: [purpose || '', Validators.required],
 				description: [description || '']
+			})
+		);
+	}
+
+	addDefaultAction() {
+		this.addAction({
+			if: {
+				type: ActionIfType.ALL_PASSED
+			},
+			then: {
+				type: ActionThenType.ADD_TO_PLAYLIST,
+				id: null
+			}
+		});
+	}
+
+	addAction(action: Action) {
+		this.formActions.push(
+			this.fb.group({
+				ifType: action.if.type,
+				ifId: (action.if as ActionIfCriteria).id || null,
+				thenType: action.then.type,
+				thenId: (action.then as ActionThenAddToPlaylist).id || null
 			})
 		);
 	}

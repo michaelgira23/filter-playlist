@@ -6,12 +6,15 @@
 			(selectValue)="onSelectSource($event)" displayKey="name">
 		</app-selection>
 		<h2>Criteria</h2>
-		<div formArrayName='criteria' class="section-container inset criteria-container inset" cdkDropList
+		<div formArrayName="criteria" class="section-container inset criteria-container inset" cdkDropList
 			(cdkDropListDropped)="reorderCriteria($event)">
 			<div *ngFor="let criterion of formCriteria.controls; let i = index;" class="list-item criteria-item"
-				[formGroupName]="i" cdkDrag cdkDragLockAxis="y">
-				<div class="drag-criteria" [class.hide]="formCriteria.controls.length === 1">
-					<fa-icon [icon]="faBars" cdkDragHandle></fa-icon>
+				[formGroupName]="i" cdkDrag cdkDragLockAxis="y"
+				[cdkDragDisabled]="formCriteria.controls.length === 1 || (criterion.invalid && i === formCriteria.controls.length - 1)">
+				<div class="drag-criteria"
+					[class.hide]="formCriteria.controls.length === 1 || (criterion.invalid && i === formCriteria.controls.length - 1)"
+					cdkDragHandle>
+					<fa-icon [icon]="faBars"></fa-icon>
 				</div>
 				<div class="input-container">
 					<input class="header-input show-optional-header" [class.show-inputs]="criterion.value.description"
@@ -22,7 +25,14 @@
 			</div>
 		</div>
 		<h2>Actions</h2>
-		<app-playlist-action [searchPlaylists]="searchPlaylists"></app-playlist-action>
+		<div formArrayName="actions" class="section-container">
+			<div *ngFor="let action of formActions.controls; let i = index;">
+				<app-playlist-action [searchPlaylists]="searchPlaylists"></app-playlist-action>
+			</div>
+			<div class="list-item add-action" (click)="addDefaultAction()">
+				<h2 class="placeholder">add action</h2>
+			</div>
+		</div>
 		<h2>Collaborators</h2>
 		<button class="button">Create</button>
 	</form>

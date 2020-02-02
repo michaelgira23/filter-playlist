@@ -40,6 +40,7 @@
 
 .drag-criteria {
 	width: $inset-margin;
+	height: 100%;
 	position: absolute;
 	font-size: 2.25rem;
 	transform: translateX(-100%);
@@ -47,11 +48,16 @@
 
 	display: flex;
 	justify-content: center;
+	align-items: center;
 
 	opacity: 1;
 
 	&.hide {
 		opacity: 0;
+
+		fa-icon {
+			display: none;
+		}
 	}
 }
 
@@ -77,4 +83,8 @@
 // The other criteria while one of them is being dragged
 .criteria-container.cdk-drop-list-dragging .criteria-item:not(.cdk-drag-placeholder) {
 	transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.add-action {
+	cursor: pointer;
 }
