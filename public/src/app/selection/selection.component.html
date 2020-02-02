@@ -9,10 +9,11 @@
 	<div class="container">
 		<h1>
 			<fa-icon [icon]="faTimes" class="close-modal" (click)="hideModal()"></fa-icon>
-			Select Your {{selectionLabel}}
+			{{ create ? 'Create or Select' : 'Select' }} a {{selectionLabel}}
 		</h1>
-		<input class="header-input search-input" placeholder="search your playlists" [(value)]="value"
+		<input class="header-input search-input" placeholder="search your playlists" [(ngModel)]="value"
 			(input)="onSearch($event.target.value)">
+		<button *ngIf="create" type="button" class="button" (click)="onCreateButton()">Create</button>
 		<ng-container *ngIf="searchResults.length > 0; else empty">
 			<button *ngFor="let result of searchResults" class="list-item" (click)="onSelect(result)"
 				(focus)="onFocus(result)" (blur)="onUnfocus()">

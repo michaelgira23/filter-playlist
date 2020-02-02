@@ -8,12 +8,12 @@ export interface Action {
  */
 
 export enum ActionIfType {
-	ALL_PASSED,
-	NONE_PASSED,
-	ANY_PASSED,
-	ANY_FAILED,
-	CRITERIA_N_PASSED,
-	CRITERIA_N_FAILED
+	ALL_PASSED = 'ALL_PASSED',
+	ALL_FAILED = 'ALL_FAILED',
+	ANY_PASSED = 'ANY_PASSED',
+	ANY_FAILED = 'ANY_FAILED',
+	CRITERIA_N_PASSED = 'CRITERIA_N_PASSED',
+	CRITERIA_N_FAILED = 'CRITERIA_N_FAILED'
 }
 
 interface ActionIfBase {
@@ -32,15 +32,15 @@ type ActionIf = ActionIfBase | ActionIfCriteria;
  */
 
 export enum ActionThenType {
-	ADD_TO_PLAYLIST,
-	REMOVE_FROM_CURRENT_PLAYLIST
+	ADD_TO_PLAYLIST = 'ADD_TO_PLAYLIST',
+	REMOVE_FROM_CURRENT_PLAYLIST = 'REMOVE_FROM_CURRENT_PLAYLIST'
 }
 
 interface ActionThenBase {
-	type: Omit<ActionThenType, ActionThenType.ADD_TO_PLAYLIST>;
+	type: ActionThenType.REMOVE_FROM_CURRENT_PLAYLIST;
 }
 
-interface ActionThenAddToPlaylist extends ActionThenBase {
+export interface ActionThenAddToPlaylist {
 	type: ActionThenType.ADD_TO_PLAYLIST;
 	id: string;
 }

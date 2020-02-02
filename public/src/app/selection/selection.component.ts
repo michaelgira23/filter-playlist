@@ -1,4 +1,5 @@
 import { Component, EventEmitter, HostListener, Input, OnInit, Output } from '@angular/core';
+import { Observable, of } from 'rxjs';
 import { faTimes } from '@fortawesome/pro-light-svg-icons';
 import { faSortDown } from '@fortawesome/pro-solid-svg-icons';
 import Fuse from 'fuse.js';
@@ -9,18 +10,6 @@ import Fuse from 'fuse.js';
 	styleUrls: ['./selection.component.scss']
 })
 export class SelectionComponent implements OnInit {
-
-	faSortDown = faSortDown;
-	faTimes = faTimes;
-
-	// Type of "thing" we're searching for (Ex. "Playlist" or "User")
-	@Input() selectionLabel: string;
-	// What property in the fuzzy search we should display in the results
-	@Input() displayKey: string;
-	// Value of the text input
-	@Input() value = '';
-	// What to display if no results found
-	@Input() emptyMessage = 'Sorry! No results found.';
 	// Fuse.js object for fuzzy search
 	@Input()
 	get search() {
@@ -30,6 +19,22 @@ export class SelectionComponent implements OnInit {
 		this._search = fuse;
 		this.refreshSearch();
 	}
+
+	constructor() { }
+
+	faSortDown = faSortDown;
+	faTimes = faTimes;
+
+	// Type of "thing" we're searching for (Ex. "Playlist" or "User")
+	@Input() selectionLabel: string;
+	// What property in the fuzzy search we should display in the results
+	@Input() displayKey: string;
+	// Whether to allow option to create a new thing too
+	@Input() create = false;
+	// Value of the text input
+	@Input() value = '';
+	// What to display if no results found
+	@Input() emptyMessage = 'Sorry! No results found.';
 	// tslint:disable-next-line: variable-name
 	private _search: Fuse<any, Fuse.FuseOptions<any>>;
 
@@ -43,8 +48,9 @@ export class SelectionComponent implements OnInit {
 
 	modal = false;
 	private focusResult: any = null;
-
-	constructor() { }
+	// Callback for creating something.
+	/** @TODO If there's a more "Angular" way to do this without too many limitations */
+	@Input() onCreate: (value: string) => Observable<any> = () => of(null);
 
 	ngOnInit() {
 	}
@@ -83,11 +89,29 @@ export class SelectionComponent implements OnInit {
 	}
 
 	onSelect(result: any) {
-		this.value = result[this.displayKey];
-		this.selectedValue = result[this.displayKey];
+		if (result) {
+			this.value = result[this.displayKey];
+			this.selectedValue = result[this.displayKey];
+		} else {
+			this.value = '';
+			this.selectedValue = result;
+		}
 		this.selectValue.emit(result);
 		this.hideModal();
 		this.refreshSearch();
+	}
+
+	onCreateButton() {
+		console.log('create with result', this.value);
+		this.onCreate(this.value).subscribe(
+			result => {
+				console.log('created thing', result);
+				this.onSelect(result);
+			},
+			err => {
+				console.log('Error creating thing!', err);
+			}
+		);
 	}
 
 	onFocus(result: any) {

@@ -1,7 +1,7 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { TextFieldModule } from '@angular/cdk/text-field';
 import { AngularFireModule } from '@angular/fire';
@@ -42,6 +42,7 @@ import { SpotifyService } from './spotify.service';
 		BrowserModule,
 		AppRoutingModule,
 		HttpClientModule,
+		FormsModule,
 		ReactiveFormsModule,
 		DragDropModule,
 		TextFieldModule,
