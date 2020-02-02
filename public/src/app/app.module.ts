@@ -20,6 +20,7 @@ import { LogoutComponent } from './logout/logout.component';
 import { FilterPlaylistComponent } from './filter-playlist/filter-playlist.component';
 import { SelectPlaylistComponent } from './select-playlist/select-playlist.component';
 import { UpsertPlaylistComponent } from './upsert-playlist/upsert-playlist.component';
+import { PlaylistActionComponent } from './upsert-playlist/playlist-action/playlist-action.component';
 import { SelectionComponent } from './selection/selection.component';
 import { ListItemComponent } from './list-item/list-item.component';
 
@@ -33,6 +34,7 @@ import { SpotifyService } from './spotify.service';
 		FilterPlaylistComponent,
 		SelectPlaylistComponent,
 		UpsertPlaylistComponent,
+		PlaylistActionComponent,
 		SelectionComponent,
 		ListItemComponent
 	],

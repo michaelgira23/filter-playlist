@@ -119,13 +119,15 @@ button {
 	transition-timing-function: ease-out;
 	transition-property: background, color;
 
-	&:hover {
-		background: $slightly-light-dark-gray;
-	}
+	&:not(.no-hover) {
+		&:hover {
+			background: $slightly-light-dark-gray;
+		}
 
-	&:focus {
-		color: $black;
-		background: $light-gray;
+		&:focus {
+			color: $black;
+			background: $light-gray;
+		}
 	}
 
 	h2 {
