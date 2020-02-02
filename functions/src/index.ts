@@ -50,12 +50,10 @@ async function authenticateSpotify(Spotify: SpotifyWebApi, uid: string) {
 	Spotify.setAccessToken(credentials.accessToken);
 
 	// Refresh access token if it expired (or will expire in 30 seconds)
-	console.log('expires in', credentials.expiresAt - currentTimestamp());
 	if (currentTimestamp() >= credentials.expiresAt - 30) {
 		const refreshResult = await Spotify.refreshAccessToken();
 		const accessToken = refreshResult.body['access_token'];
 		const expiresAt = currentTimestamp() + refreshResult.body['expires_in'];
-		console.log('expires in', refreshResult.body['expires_in'], expiresAt - Date.now());
 		Spotify.setAccessToken(accessToken);
 		await credentialsDoc.update({ accessToken, expiresAt });
 	}
@@ -233,6 +231,39 @@ app.get('/playlists', async (req, res, next) => {
 		} while (playlists.length < playlistTotal);
 
 		res.json({ playlists });
+	} catch (err) {
+		// Express cannot handle asynchronous promise rejections
+		next(err);
+	}
+});
+
+/**
+ * Create Spotify Playlist
+ */
+
+app.post('/playlists', async (req, res, next) => {
+	try {
+		// Get token from header
+		const token = req.get('Authorization')?.substring('Bearer '.length);
+		if (!token) throw new Error('No authorization token provided!');
+
+		// Get Firebase token and Spotify username
+		const decodedToken = await admin.auth().verifyIdToken(token);
+		const uid = decodedToken.uid;
+		const username = uid.substring('spotify:'.length);
+
+		// Get Spotify playlists
+		const Spotify = await spotifyFactory(uid);
+
+		// Make sure provided name in request
+		if (typeof req.body['name'] !== 'string') throw new Error('Please provide playlist name!');
+
+		const result = await Spotify.createPlaylist(username, req.body['name'], {
+			public: true,
+			description: 'Auto-generated playlist created with Filter Playlist (https://filter-playlist.web.app)'
+		});
+
+		res.json(result.body);
 	} catch (err) {
 		// Express cannot handle asynchronous promise rejections
 		next(err);

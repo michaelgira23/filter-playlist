@@ -1,8 +1,10 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { tap } from 'rxjs/operators';
 import Fuse from 'fuse.js';
 import 'spotify-api';
 
 import { Action, ActionIfType, ActionThenType, ActionThenAddToPlaylist } from '../../../model/actions';
+import { SpotifyService } from '../../spotify.service';
 
 @Component({
 	selector: 'app-playlist-action',
@@ -27,7 +29,7 @@ export class PlaylistActionComponent implements OnInit {
 
 	@Output() actionChange = new EventEmitter<Action>();
 
-	constructor() { }
+	constructor(private spotifyService: SpotifyService) { }
 
 	ngOnInit() {
 	}
@@ -37,6 +39,16 @@ export class PlaylistActionComponent implements OnInit {
 		if (playlist && this.action.then.type === ActionThenType.ADD_TO_PLAYLIST) {
 			(this.action.then as ActionThenAddToPlaylist).id = playlist.id;
 		}
+	}
+
+	createPlaylist(name: string) {
+		return this.spotifyService.createPlaylist(name).pipe(
+			// Add new playlist to the list of existing onces for search
+			tap(playlist => {
+				(this.searchPlaylists as any).list.push(playlist);
+				console.log('playlist', playlist);
+			})
+		);
 	}
 
 }

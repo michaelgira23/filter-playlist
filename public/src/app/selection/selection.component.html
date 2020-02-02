@@ -1,6 +1,6 @@
 <div class="selection-input list-item" (click)="showModal()">
 	<h2 [class.placeholder]="!selectedValue">
-		{{selectedValue ? selectedValue : 'select ' + selectionLabel.toLowerCase()}}
+		{{selectedValue ? selectedValue : (create ? 'select or create ' : 'select ') + selectionLabel.toLowerCase()}}
 	</h2>
 	<fa-icon [icon]="faSortDown" class="placeholder"></fa-icon>
 </div>

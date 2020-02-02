@@ -22,6 +22,14 @@ export class SpotifyService {
 		);
 	}
 
+	createPlaylist(name: string) {
+		return this.generateOptions().pipe(
+			switchMap(options =>
+				this.http.post<GetPlaylistsResponse>(`${environment.firebaseFunctionsHost}/widgets/playlists`, { name }, options)
+			)
+		);
+	}
+
 	private generateOptions() {
 		return from(this.afAuth.auth.currentUser.getIdToken()).pipe(
 			map(token => ({
