@@ -53,6 +53,10 @@ export class SelectionComponent implements OnInit {
 	@Input() onCreate: (value: string) => Observable<any> = () => of(null);
 
 	ngOnInit() {
+		// If parent inputted value, display that
+		if (this.value) {
+			this.selectedValue = this.value;
+		}
 	}
 
 	@HostListener('document:keydown', ['$event'])

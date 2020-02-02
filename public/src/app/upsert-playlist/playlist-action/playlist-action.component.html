@@ -16,7 +16,7 @@
 		</select>
 		<app-selection *ngIf="action.then.type === ActionThenType.ADD_TO_PLAYLIST" selectionLabel="Playlist"
 			[create]="true" [onCreate]="createPlaylist.bind(this)" [search]="searchPlaylists"
-			(selectValue)="onThenPlaylistSelected($event)" displayKey="name">
+			[value]="thenPlaylist?.name || ''" (selectValue)="onThenPlaylistSelected($event)" displayKey="name">
 		</app-selection>
 	</h2>
 	{{action | json}}

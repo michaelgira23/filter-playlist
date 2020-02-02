@@ -29,6 +29,8 @@ export class PlaylistActionComponent implements OnInit {
 
 	@Output() actionChange = new EventEmitter<Action>();
 
+	thenPlaylist: SpotifyApi.PlaylistObjectSimplified = null;
+
 	constructor(private spotifyService: SpotifyService) { }
 
 	ngOnInit() {
@@ -37,6 +39,7 @@ export class PlaylistActionComponent implements OnInit {
 	onThenPlaylistSelected(playlist: SpotifyApi.PlaylistObjectSimplified) {
 		console.log('playlist selected then', playlist);
 		if (playlist && this.action.then.type === ActionThenType.ADD_TO_PLAYLIST) {
+			this.thenPlaylist = playlist;
 			(this.action.then as ActionThenAddToPlaylist).id = playlist.id;
 		}
 	}
