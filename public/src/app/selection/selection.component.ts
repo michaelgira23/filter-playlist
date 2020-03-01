@@ -1,5 +1,6 @@
-import { Component, EventEmitter, HostListener, Input, OnInit, Output } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { Component, EventEmitter, HostListener, Input, OnInit, Output, forwardRef } from '@angular/core';
+import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { Observable, of, Subject } from 'rxjs';
 import { faTimes } from '@fortawesome/pro-light-svg-icons';
 import { faSortDown } from '@fortawesome/pro-solid-svg-icons';
 import Fuse from 'fuse.js';
@@ -7,9 +8,16 @@ import Fuse from 'fuse.js';
 @Component({
 	selector: 'app-selection',
 	templateUrl: './selection.component.html',
-	styleUrls: ['./selection.component.scss']
+	styleUrls: ['./selection.component.scss'],
+	providers: [
+		{
+			provide: NG_VALUE_ACCESSOR,
+			useExisting: forwardRef(() => SelectionComponent),
+			multi: true
+		}
+	]
 })
-export class SelectionComponent implements OnInit {
+export class SelectionComponent implements ControlValueAccessor, OnInit {
 	// Fuse.js object for fuzzy search
 	@Input()
 	get search() {
@@ -29,6 +37,8 @@ export class SelectionComponent implements OnInit {
 	@Input() selectionLabel: string;
 	// What property in the fuzzy search we should display in the results
 	@Input() displayKey: string;
+	// What property in the fuzzy search we should use as the input value
+	@Input() valueKey: string;
 	// Whether to allow option to create a new thing too
 	@Input() create = false;
 	// Value of the text input
@@ -132,6 +142,34 @@ export class SelectionComponent implements OnInit {
 
 	hideModal() {
 		this.modal = false;
+	}
+
+	/**
+	 * Add functionality as a reactive forms input
+	 */
+
+	writeValue(obj: any): void {
+		if (typeof obj === 'string') {
+			this.onSelect({ [this.displayKey]: obj });
+		} else {
+			this.onSelect(obj);
+		}
+	}
+
+	registerOnChange(fn: any): void {
+		this.selectValue.subscribe(selectedValue => {
+			fn(selectedValue[this.valueKey]);
+		});
+	}
+
+	registerOnTouched(fn: any): void {
+		/** @TODO */
+		// throw new Error('Method not implemented.');
+	}
+
+	setDisabledState?(isDisabled: boolean): void {
+		/** @TODO */
+		// throw new Error('Method not implemented.');
 	}
 
 }

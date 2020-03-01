@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { FormBuilder, FormArray, Validators, FormGroup } from '@angular/forms';
+import { FormBuilder, FormArray, Validators, FormGroup, ValidationErrors } from '@angular/forms';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Observable } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
@@ -31,7 +31,7 @@ export class UpsertPlaylistComponent implements OnInit {
 	searchPlaylists: Fuse<SpotifyApi.PlaylistObjectSimplified, any>;
 
 	form = this.fb.group({
-		originId: [''],
+		originId: [null, Validators.required],
 		criteria: this.fb.array([]),
 		actions: this.fb.array([])
 	});
@@ -66,19 +66,45 @@ export class UpsertPlaylistComponent implements OnInit {
 		);
 	}
 
+	/**
+	 * When source playlist is created
+	 * @param source Spotify object of the playlist selected
+	 */
 	onSelectSource(source: SpotifyApi.PlaylistObjectSimplified) {
 		console.log('select playlist', source);
+		this.form.setValue({ originId: source.id });
 	}
 
+	/**
+	 * Add criteria input to the form
+	 * @param purpose Initial value to put as the purpose
+	 * @param description Initial value to put as the description
+	 */
+	addCriteria(purpose?: string, description?: string) {
+		this.formCriteria.push(
+			this.fb.group({
+				purpose: [purpose || ''],
+				description: [description || '']
+			})
+		);
+	}
+
+	/**
+	 * Handle when inputs of criteria have changed (i.e. someone typed)
+	 */
 	onCriteriaChange() {
 		this.ensureOneExtraCriteria();
 	}
 
+	/**
+	 * Ensure that there is always another empty criteria at the end for a user to add more criteria.
+	 * Having an empty purpose but filled description does not count as a valid criteria.
+	 */
 	ensureOneExtraCriteria() {
 		const criteria = this.formCriteria.controls;
 		const secondToLastCriterion = criteria[criteria.length - 2];
 		const lastCriterion = criteria[criteria.length - 1];
-		if (lastCriterion && lastCriterion.valid) {
+		if (lastCriterion && lastCriterion.value.purpose.length) {
 			// Criteria all filled up; add another
 			this.addCriteria();
 		} else if (secondToLastCriterion && secondToLastCriterion.invalid) {
@@ -88,24 +114,18 @@ export class UpsertPlaylistComponent implements OnInit {
 		}
 	}
 
+	/**
+	 * Reorder criteria
+	 * @param event Angular CDK drag event object
+	 */
 	reorderCriteria(event: CdkDragDrop<FormGroup>) {
-		console.log('move item from', event.previousIndex, 'to', event.currentIndex);
 		moveItemInArray(this.formCriteria.controls, event.previousIndex, event.currentIndex);
+		this.ensureOneExtraCriteria();
 	}
 
-	save() {
-		console.log('Save playlist!', this.form.value);
-	}
-
-	addCriteria(purpose?: string, description?: string) {
-		this.formCriteria.push(
-			this.fb.group({
-				purpose: [purpose || '', Validators.required],
-				description: [description || '']
-			})
-		);
-	}
-
+	/**
+	 * Add a blank action to the form
+	 */
 	addDefaultAction() {
 		this.addAction({
 			if: {
@@ -118,10 +138,10 @@ export class UpsertPlaylistComponent implements OnInit {
 		});
 	}
 
-	deleteAction(index: number) {
-		this.formActions.controls.splice(index, 1);
-	}
-
+	/**
+	 * Add a specific action to the form
+	 * @param action Action object with proper values
+	 */
 	addAction(action: Action) {
 		this.formActions.push(
 			this.fb.group({
@@ -131,6 +151,31 @@ export class UpsertPlaylistComponent implements OnInit {
 				thenId: (action.then as ActionThenAddToPlaylist).id || null
 			})
 		);
+	}
+
+	/**
+	 * Delete action from the form
+	 * @param index Index of the action
+	 */
+	deleteAction(index: number) {
+		// this.formActions.controls.splice(index, 1);
+		this.formActions.removeAt(index);
+	}
+
+	/**
+	 * Update/insert filtered playlist into backend
+	 */
+	save() {
+		Object.keys(this.form.controls).forEach(key => {
+			const controlErrors: ValidationErrors = this.form.get(key).errors;
+			if (controlErrors != null) {
+				Object.keys(controlErrors).forEach(keyError => {
+					console.log('Key control: ' + key + ', keyError: ' + keyError + ', err value: ', controlErrors[keyError]);
+				});
+			}
+		});
+
+		console.log('Save playlist!', this.form.valid, this.form.value, this.form.errors);
 	}
 
 }

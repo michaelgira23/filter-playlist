@@ -27,6 +27,7 @@ export class PlaylistActionComponent implements OnInit {
 	};
 	@Input() searchPlaylists: Fuse<SpotifyApi.PlaylistObjectSimplified, any>;
 
+	// Emit action object whenever the inputs change
 	@Output() actionChange = new EventEmitter<Action>();
 
 	thenPlaylist: SpotifyApi.PlaylistObjectSimplified = null;
@@ -44,6 +45,10 @@ export class PlaylistActionComponent implements OnInit {
 		}
 	}
 
+	/**
+	 * Logic to create a Spotify playlist on the Spotify platform
+	 * @param name Name of the playlist
+	 */
 	createPlaylist(name: string) {
 		return this.spotifyService.createPlaylist(name).pipe(
 			// Add new playlist to the list of existing onces for search

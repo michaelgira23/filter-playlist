@@ -2,17 +2,18 @@
 	<h1>Filter Playlist</h1>
 	<form [formGroup]="form" (ngSubmit)="save()">
 		<h2>Source Playlist</h2>
-		<app-selection class="section-container" selectionLabel="Playlist" [search]="searchPlaylists"
-			(selectValue)="onSelectSource($event)" displayKey="name">
+		<app-selection class="section-container" selectionLabel="Playlist" [search]="searchPlaylists" displayKey="name"
+			valueKey="id" formControlName="originId">
 		</app-selection>
 		<h2>Criteria</h2>
 		<div formArrayName="criteria" class="section-container inset criteria-container inset" cdkDropList
 			(cdkDropListDropped)="reorderCriteria($event)">
 			<div *ngFor="let criterion of formCriteria.controls; let i = index;" class="list-item criteria-item"
 				[formGroupName]="i" cdkDrag cdkDragLockAxis="y"
-				[cdkDragDisabled]="formCriteria.controls.length <= 2 || (criterion.invalid && i === formCriteria.controls.length - 1)">
+				[cdkDragDisabled]="formCriteria.controls.length <= 2 || (criterion.value.purpose.length && i === formCriteria.controls.length - 1)">
+				<!-- Only show drag if there's enough elements to drag AND last element has stuff in it -->
 				<div class="drag-criteria"
-					[class.hide]="formCriteria.controls.length <= 2 || (criterion.invalid && i === formCriteria.controls.length - 1)"
+					[class.hide]="formCriteria.controls.length <= 2 || (criterion.value.purpose.length && i === formCriteria.controls.length - 1)"
 					cdkDragHandle>
 					<fa-icon [icon]="faBars"></fa-icon>
 				</div>
