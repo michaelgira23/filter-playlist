@@ -145,7 +145,7 @@ export class SelectionComponent implements ControlValueAccessor, OnInit {
 	}
 
 	/**
-	 * Add functionality as a reactive forms input
+	 * Add functionality as a Reactive Forms input
 	 */
 
 	writeValue(obj: any): void {

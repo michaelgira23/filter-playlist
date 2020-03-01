@@ -8,7 +8,7 @@ import { faBars, faTrashAlt } from '@fortawesome/pro-light-svg-icons';
 import Fuse from 'fuse.js';
 import 'spotify-api';
 
-import { Action, ActionIfType, ActionIfCriteria, ActionThenAddToPlaylist, ActionThenType } from '../../model/actions';
+import { Action, ActionIfType, ActionIfCriteria, ActionThenAddToPlaylist, ActionThenType, serializeAction } from '../../model/actions';
 import { FilteredPlaylist } from '../../model/filtered-playlist';
 import { SpotifyService } from '../spotify.service';
 
@@ -144,12 +144,7 @@ export class UpsertPlaylistComponent implements OnInit {
 	 */
 	addAction(action: Action) {
 		this.formActions.push(
-			this.fb.group({
-				ifType: action.if.type,
-				ifId: (action.if as ActionIfCriteria).id || null,
-				thenType: action.then.type,
-				thenId: (action.then as ActionThenAddToPlaylist).id || null
-			})
+			this.fb.group(serializeAction(action))
 		);
 	}
 

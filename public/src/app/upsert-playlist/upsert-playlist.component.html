@@ -31,7 +31,8 @@
 				<div class="delete-container">
 					<fa-icon [icon]="faTrashAlt" [fixedWidth]="true" (click)="deleteAction(i)"></fa-icon>
 				</div>
-				<app-playlist-action [searchPlaylists]="searchPlaylists"></app-playlist-action>
+				<!-- @TODO Fix form group/control -->
+				<app-playlist-action [searchPlaylists]="searchPlaylists" [formGroup]="action"></app-playlist-action>
 			</div>
 			<div class="list-item add-action" (click)="addDefaultAction()">
 				<h2 class="placeholder">add action</h2>

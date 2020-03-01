@@ -3,6 +3,13 @@ export interface Action {
 	then: ActionThen;
 }
 
+export interface SerializedAction {
+	ifType: ActionIfType;
+	ifId: string | null;
+	thenType: ActionThenType;
+	thenId: string | null;
+}
+
 /**
  * Define "if"s for triggering actions
  */
@@ -17,7 +24,7 @@ export enum ActionIfType {
 }
 
 interface ActionIfBase {
-	type: Omit<ActionIfType, ActionIfType.CRITERIA_N_PASSED | ActionIfType.CRITERIA_N_FAILED>;
+	type: ActionIfType;
 }
 
 export interface ActionIfCriteria extends ActionIfBase {
@@ -46,3 +53,25 @@ export interface ActionThenAddToPlaylist {
 }
 
 type ActionThen = ActionThenBase | ActionThenAddToPlaylist;
+
+export function serializeAction(action: Action): SerializedAction {
+	return {
+		ifType: action.if.type,
+		ifId: (action.if as ActionIfCriteria).id || null,
+		thenType: action.then.type,
+		thenId: (action.then as ActionThenAddToPlaylist).id || null
+	};
+}
+
+export function deserializeAction(serialized: SerializedAction) {
+	return {
+		if: {
+			type: serialized.ifType,
+			id: serialized.ifId
+		},
+		then: {
+			type: serialized.thenType,
+			id: serialized.thenId
+		}
+	};
+}

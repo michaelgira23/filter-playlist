@@ -1,17 +1,25 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, forwardRef } from '@angular/core';
+import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { tap } from 'rxjs/operators';
 import Fuse from 'fuse.js';
 import 'spotify-api';
 
-import { Action, ActionIfType, ActionThenType, ActionThenAddToPlaylist } from '../../../model/actions';
+import { Action, ActionIfType, ActionThenType, ActionThenAddToPlaylist, serializeAction, deserializeAction } from '../../../model/actions';
 import { SpotifyService } from '../../spotify.service';
 
 @Component({
 	selector: 'app-playlist-action',
 	templateUrl: './playlist-action.component.html',
-	styleUrls: ['./playlist-action.component.scss']
+	styleUrls: ['./playlist-action.component.scss'],
+	providers: [
+		{
+			provide: NG_VALUE_ACCESSOR,
+			useExisting: forwardRef(() => PlaylistActionComponent),
+			multi: true
+		}
+	]
 })
-export class PlaylistActionComponent implements OnInit {
+export class PlaylistActionComponent implements ControlValueAccessor, OnInit {
 
 	ActionIfType = ActionIfType;
 	ActionThenType = ActionThenType;
@@ -57,6 +65,28 @@ export class PlaylistActionComponent implements OnInit {
 				console.log('playlist', playlist);
 			})
 		);
+	}
+
+	/**
+	 * Add functionality as a Reactive Forms input
+	 */
+
+	writeValue(obj: any): void {
+		console.log('write value', deserializeAction(obj));
+		this.action = deserializeAction(obj);
+	}
+	registerOnChange(fn: any): void {
+		this.actionChange.subscribe(changedAction => {
+			fn(serializeAction(changedAction));
+		});
+	}
+	registerOnTouched(fn: any): void {
+		/** @TODO */
+		// throw new Error('Method not implemented.');
+	}
+	setDisabledState?(isDisabled: boolean): void {
+		/** @TODO */
+		// throw new Error('Method not implemented.');
 	}
 
 }
