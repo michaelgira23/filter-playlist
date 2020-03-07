@@ -19,6 +19,7 @@ import { SpotifyService } from '../spotify.service';
 })
 export class UpsertPlaylistComponent implements OnInit {
 
+	console = console;
 	faBars = faBars;
 	faTrashAlt = faTrashAlt;
 
@@ -33,7 +34,16 @@ export class UpsertPlaylistComponent implements OnInit {
 	form = this.fb.group({
 		originId: [null, Validators.required],
 		criteria: this.fb.array([]),
-		actions: this.fb.array([])
+		actions: this.fb.array([]),
+		action: serializeAction({
+			if: {
+				type: ActionIfType.ALL_PASSED
+			},
+			then: {
+				type: ActionThenType.ADD_TO_PLAYLIST,
+				id: null
+			}
+		})
 	});
 
 	get formCriteria() {
@@ -107,7 +117,7 @@ export class UpsertPlaylistComponent implements OnInit {
 		if (lastCriterion && lastCriterion.value.purpose.length) {
 			// Criteria all filled up; add another
 			this.addCriteria();
-		} else if (secondToLastCriterion && secondToLastCriterion.invalid) {
+		} else if (secondToLastCriterion && !secondToLastCriterion.value.purpose.length) {
 			// Both last and second to last are invalid; delete the last one
 			criteria.splice(criteria.length - 1, 1);
 			this.ensureOneExtraCriteria();

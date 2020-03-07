@@ -32,7 +32,11 @@
 					<fa-icon [icon]="faTrashAlt" [fixedWidth]="true" (click)="deleteAction(i)"></fa-icon>
 				</div>
 				<!-- @TODO Fix form group/control -->
-				<app-playlist-action [searchPlaylists]="searchPlaylists" [formGroup]="action"></app-playlist-action>
+				<!-- <app-playlist-action [searchPlaylists]="searchPlaylists" [formGroup]="action"></!-->
+				<!-- <app-playlist-action [searchPlaylists]="searchPlaylists" [formControl]="formActions.controls[i]">
+				</app-playlist-action> -->
+				<app-playlist-action [searchPlaylists]="searchPlaylists" [formControlName]="i"></app-playlist-action>
+				{{console.log(formActions.controls[i].registerOnChange)}}
 			</div>
 			<div class="list-item add-action" (click)="addDefaultAction()">
 				<h2 class="placeholder">add action</h2>

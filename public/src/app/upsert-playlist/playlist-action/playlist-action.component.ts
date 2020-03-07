@@ -4,7 +4,7 @@ import { tap } from 'rxjs/operators';
 import Fuse from 'fuse.js';
 import 'spotify-api';
 
-import { Action, ActionIfType, ActionThenType, ActionThenAddToPlaylist, serializeAction, deserializeAction } from '../../../model/actions';
+import { Action, ActionIfType, ActionThenType, ActionThenAddToPlaylist, serializeAction, deserializeAction, SerializedAction } from '../../../model/actions';
 import { SpotifyService } from '../../spotify.service';
 
 @Component({
@@ -24,7 +24,7 @@ export class PlaylistActionComponent implements ControlValueAccessor, OnInit {
 	ActionIfType = ActionIfType;
 	ActionThenType = ActionThenType;
 
-	@Input() action: Action = {
+	@Input() action: SerializedAction = serializeAction({
 		if: {
 			type: ActionIfType.ALL_PASSED
 		},
@@ -32,24 +32,26 @@ export class PlaylistActionComponent implements ControlValueAccessor, OnInit {
 			type: ActionThenType.ADD_TO_PLAYLIST,
 			id: null
 		}
-	};
+	});
 	@Input() searchPlaylists: Fuse<SpotifyApi.PlaylistObjectSimplified, any>;
 
 	// Emit action object whenever the inputs change
-	@Output() actionChange = new EventEmitter<Action>();
+	@Output() actionChange = new EventEmitter<SerializedAction>();
 
 	thenPlaylist: SpotifyApi.PlaylistObjectSimplified = null;
 
-	constructor(private spotifyService: SpotifyService) { }
+	constructor(private spotifyService: SpotifyService) {
+		this.attachChangeProxy();
+	}
 
 	ngOnInit() {
 	}
 
 	onThenPlaylistSelected(playlist: SpotifyApi.PlaylistObjectSimplified) {
 		console.log('playlist selected then', playlist);
-		if (playlist && this.action.then.type === ActionThenType.ADD_TO_PLAYLIST) {
+		if (playlist && this.action.thenType === ActionThenType.ADD_TO_PLAYLIST) {
 			this.thenPlaylist = playlist;
-			(this.action.then as ActionThenAddToPlaylist).id = playlist.id;
+			this.action.thenId = playlist.id;
 		}
 	}
 
@@ -68,16 +70,30 @@ export class PlaylistActionComponent implements ControlValueAccessor, OnInit {
 	}
 
 	/**
+	 * Add proxy to the action object so that component will emit whenever its properties change
+	 */
+	private attachChangeProxy() {
+		this.action = new Proxy(this.action, {
+			set: (obj, prop, value) => {
+				obj[prop] = value;
+				this.actionChange.emit(obj);
+				return true;
+			}
+		});
+	}
+
+	/**
 	 * Add functionality as a Reactive Forms input
 	 */
 
 	writeValue(obj: any): void {
-		console.log('write value', deserializeAction(obj));
-		this.action = deserializeAction(obj);
+		this.action = obj;
+		this.attachChangeProxy();
 	}
 	registerOnChange(fn: any): void {
 		this.actionChange.subscribe(changedAction => {
-			fn(serializeAction(changedAction));
+			console.log('register change', changedAction);
+			fn(changedAction);
 		});
 	}
 	registerOnTouched(fn: any): void {
