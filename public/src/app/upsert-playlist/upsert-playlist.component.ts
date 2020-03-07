@@ -8,9 +8,11 @@ import { faBars, faTrashAlt } from '@fortawesome/pro-light-svg-icons';
 import Fuse from 'fuse.js';
 import 'spotify-api';
 
-import { Action, ActionIfType, ActionIfCriteria, ActionThenAddToPlaylist, ActionThenType, serializeAction } from '../../model/actions';
+import { Action, ActionIfType, ActionThenType, serializeAction } from '../../model/actions';
 import { FilteredPlaylist } from '../../model/filtered-playlist';
 import { SpotifyService } from '../spotify.service';
+import { ValidateActions } from '../validators/actions.validator';
+import { ValidateCriteria } from '../validators/criteria.validator';
 
 @Component({
 	selector: 'app-upsert-playlist',
@@ -33,17 +35,8 @@ export class UpsertPlaylistComponent implements OnInit {
 
 	form = this.fb.group({
 		originId: [null, Validators.required],
-		criteria: this.fb.array([]),
-		actions: this.fb.array([]),
-		action: serializeAction({
-			if: {
-				type: ActionIfType.ALL_PASSED
-			},
-			then: {
-				type: ActionThenType.ADD_TO_PLAYLIST,
-				id: null
-			}
-		})
+		criteria: this.fb.array([], ValidateCriteria),
+		actions: this.fb.array([], ValidateActions)
 	});
 
 	get formCriteria() {
