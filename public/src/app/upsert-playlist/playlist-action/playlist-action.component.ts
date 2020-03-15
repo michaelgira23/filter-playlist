@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output, forwardRef } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output, forwardRef } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { tap } from 'rxjs/operators';
 import Fuse from 'fuse.js';
@@ -40,11 +40,12 @@ export class PlaylistActionComponent implements ControlValueAccessor, OnInit {
 
 	thenPlaylist: SpotifyApi.PlaylistObjectSimplified = null;
 
-	constructor(private spotifyService: SpotifyService) {
+	constructor(private cdr: ChangeDetectorRef, private spotifyService: SpotifyService) {
 		this.attachChangeProxy();
 	}
 
 	ngOnInit() {
+		this.cdr.detectChanges();
 	}
 
 	onThenPlaylistSelected(playlist: SpotifyApi.PlaylistObjectSimplified) {
