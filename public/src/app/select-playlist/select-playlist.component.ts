@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import { FilteredPlaylist } from '../../model/filtered-playlist';
+import { FilteredPlaylistsService } from '../filtered-playlists.service';
 
 @Component({
 	selector: 'app-select-playlist',
@@ -15,20 +16,17 @@ export class SelectPlaylistComponent implements OnInit {
 	private filteredPlaylistsCollection: AngularFirestoreCollection<FilteredPlaylist>;
 	filteredPlaylists: Observable<any[]>;
 
-	constructor(db: AngularFirestore) {
-		// this.filteredPlaylists = db.collection('filteredPlaylists').snapshotChanges();
-		this.filteredPlaylistsCollection = db.collection('filteredPlaylists');
-		// this.filteredPlaylists = this.filteredPlaylistsCollection.valueChanges();
-		this.filteredPlaylists = this.filteredPlaylistsCollection.snapshotChanges().pipe(
+	constructor(private filteredPlaylistsService: FilteredPlaylistsService) {
+	}
+
+	ngOnInit() {
+		this.filteredPlaylists = this.filteredPlaylistsService.getMyPlaylists().snapshotChanges().pipe(
 			map(actions => actions.map(a => {
 				const data = a.payload.doc.data() as FilteredPlaylist;
 				const id = a.payload.doc.id;
 				return { id, data };
 			}))
 		);
-	}
-
-	ngOnInit() {
 	}
 
 }

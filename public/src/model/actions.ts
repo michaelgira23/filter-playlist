@@ -1,4 +1,5 @@
 export interface Action {
+	id?: string;
 	ifType: ActionIfType;
 	ifId: string | null;
 	thenType: ActionThenType;

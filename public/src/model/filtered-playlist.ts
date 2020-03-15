@@ -1,12 +1,17 @@
-export interface FilteredPlaylist {
-	originId: string;
-	criteria: Criteria[];
-	filteredId: string;
-	createdBy: string;
+import { Action } from './actions';
+import { Criteria } from './criteria';
+
+export interface FilteredPlaylist extends UpsertFilteredPlaylist {
+	id: string;
 }
 
-export interface Criteria {
-	id: string;
-	purpose: string;
-	details: string;
+export interface UpsertFilteredPlaylist extends FirebaseFilteredPlaylist {
+	id?: string;
+	criteria: Criteria[];
+	actions: Action[];
+}
+
+export interface FirebaseFilteredPlaylist {
+	createdBy: string;
+	originId: string;
 }

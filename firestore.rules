@@ -8,22 +8,26 @@ service cloud.firestore {
 		}
 
 		match /filteredPlaylists/{playlistId} {
+
+			function isOgUser() {
+				return request.auth.uid != null && request.auth.uid == resource.data.createdBy;
+			}
+
 			// Can only modify playlists you created
-			allow write: if resource.data.keys().hasOnly(['createdBy', 'originId']) && request.auth.uid == resource.data.createdBy
-			allow read: if request.auth.uid == resource.data.createdBy
+			allow create: if request.resource.data.keys().hasOnly(['createdBy', 'originId']) && request.auth.uid != null;
+			allow write: if isOgUser() && request.resource.data.keys().hasOnly(['createdBy', 'originId']);
+			allow read: if isOgUser();
 
 			match /criteria/{criteriaId} {
 				// Can only add criteria to playlists you created
-				allow write: if resource.data.keys().hasOnly(['order', 'purpose', 'description'])
-					&& request.auth.uid == get(/databases/$(database)/documents/filteredPlaylists/$(playlistId)).data.createdBy
-				allow read: if request.auth.uid == get(/databases/$(database)/documents/filteredPlaylists/$(playlistId)).data.createdBy
+				allow write: if isOgUser() && request.resource.data.keys().hasOnly(['order', 'purpose', 'description']);
+				allow read: if isOgUser();
 			}
 
 			match /actions/{actionId} {
 				// Can only add actions to playlists you created
-				allow write: if resource.data.keys().hasOnly(['order', 'ifType', 'ifId', 'thenType', 'thenId'])
-					&& request.auth.uid == get(/databases/$(database)/documents/filteredPlaylists/$(playlistId)).data.createdBy
-				allow read: if request.auth.uid == get(/databases/$(database)/documents/filteredPlaylists/$(playlistId)).data.createdBy
+				allow write: if isOgUser() && request.resource.data.keys().hasOnly(['order', 'ifType', 'ifId', 'thenType', 'thenId']);
+				allow read: if isOgUser();
 			}
 		}
 

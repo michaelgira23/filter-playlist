@@ -9,7 +9,9 @@ import Fuse from 'fuse.js';
 import 'spotify-api';
 
 import { Action, ActionIfType, ActionThenType } from '../../model/actions';
+import { Criteria } from '../../model/criteria';
 import { FilteredPlaylist } from '../../model/filtered-playlist';
+import { FilteredPlaylistsService } from '../filtered-playlists.service';
 import { SpotifyService } from '../spotify.service';
 import { ValidateActions } from '../validators/actions.validator';
 import { ValidateCriteria } from '../validators/criteria.validator';
@@ -47,7 +49,13 @@ export class UpsertPlaylistComponent implements OnInit {
 		return this.form.get('actions') as FormArray;
 	}
 
-	constructor(private route: ActivatedRoute, private router: Router, private fb: FormBuilder, private spotify: SpotifyService) { }
+	constructor(
+		private route: ActivatedRoute,
+		private router: Router,
+		private fb: FormBuilder,
+		private filteredPlaylists: FilteredPlaylistsService,
+		private spotify: SpotifyService
+	) { }
 
 	ngOnInit() {
 		this.addCriteria();
@@ -83,11 +91,11 @@ export class UpsertPlaylistComponent implements OnInit {
 	 * @param purpose Initial value to put as the purpose
 	 * @param description Initial value to put as the description
 	 */
-	addCriteria(purpose?: string, description?: string) {
+	addCriteria(criteria?: Criteria) {
 		this.formCriteria.push(
 			this.fb.group({
-				purpose: [purpose || ''],
-				description: [description || '']
+				purpose: [(criteria && criteria.purpose) || ''],
+				description: [(criteria && criteria.description) || '']
 			})
 		);
 	}
@@ -171,6 +179,14 @@ export class UpsertPlaylistComponent implements OnInit {
 		});
 
 		console.log('Save playlist!', this.form.valid, this.form.value, this.form.errors);
+
+		if (this.form.valid) {
+			this.filteredPlaylists.upsert(this.form.value).subscribe(result => {
+				console.log('form upsert result', result);
+			});
+		} else {
+			console.log('Form invalid!');
+		}
 	}
 
 }

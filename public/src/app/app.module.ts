@@ -24,6 +24,7 @@ import { PlaylistActionComponent } from './upsert-playlist/playlist-action/playl
 import { SelectionComponent } from './selection/selection.component';
 import { ListItemComponent } from './list-item/list-item.component';
 
+import { FilteredPlaylistsService } from './filtered-playlists.service';
 import { SpotifyService } from './spotify.service';
 
 @NgModule({
@@ -54,6 +55,7 @@ import { SpotifyService } from './spotify.service';
 		AngularFireAuthGuardModule
 	],
 	providers: [
+		FilteredPlaylistsService,
 		SpotifyService
 	],
 	bootstrap: [AppComponent]
