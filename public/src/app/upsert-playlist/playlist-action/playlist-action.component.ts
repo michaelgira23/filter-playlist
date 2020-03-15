@@ -4,7 +4,7 @@ import { tap } from 'rxjs/operators';
 import Fuse from 'fuse.js';
 import 'spotify-api';
 
-import { Action, ActionIfType, ActionThenType, ActionThenAddToPlaylist, serializeAction, deserializeAction, SerializedAction } from '../../../model/actions';
+import { Action, ActionIfType, ActionThenType } from '../../../model/actions';
 import { SpotifyService } from '../../spotify.service';
 
 @Component({
@@ -24,19 +24,16 @@ export class PlaylistActionComponent implements ControlValueAccessor, OnInit {
 	ActionIfType = ActionIfType;
 	ActionThenType = ActionThenType;
 
-	@Input() action: SerializedAction = serializeAction({
-		if: {
-			type: ActionIfType.ALL_PASSED
-		},
-		then: {
-			type: ActionThenType.ADD_TO_PLAYLIST,
-			id: null
-		}
-	});
+	@Input() action: Action = {
+		ifType: ActionIfType.ALL_PASSED,
+		ifId: null,
+		thenType: ActionThenType.ADD_TO_PLAYLIST,
+		thenId: null
+	};
 	@Input() searchPlaylists: Fuse<SpotifyApi.PlaylistObjectSimplified, any>;
 
 	// Emit action object whenever the inputs change
-	@Output() actionChange = new EventEmitter<SerializedAction>();
+	@Output() actionChange = new EventEmitter<Action>();
 
 	thenPlaylist: SpotifyApi.PlaylistObjectSimplified = null;
 

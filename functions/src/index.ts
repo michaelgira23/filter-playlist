@@ -240,7 +240,6 @@ app.get('/playlists', async (req, res, next) => {
 /**
  * Create Spotify Playlist
  */
-
 app.post('/playlists', async (req, res, next) => {
 	try {
 		// Get token from header

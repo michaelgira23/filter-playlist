@@ -31,18 +31,13 @@
 				<div class="delete-container">
 					<fa-icon [icon]="faTrashAlt" [fixedWidth]="true" (click)="deleteAction(i)"></fa-icon>
 				</div>
-				<!-- @TODO Fix form group/control -->
-				<!-- <app-playlist-action [searchPlaylists]="searchPlaylists" [formGroup]="action"></!-->
-				<!-- <app-playlist-action [searchPlaylists]="searchPlaylists" [formControl]="formActions.controls[i]">
-				</app-playlist-action> -->
 				<app-playlist-action [searchPlaylists]="searchPlaylists" [formControlName]="i"></app-playlist-action>
-				<!-- {{console.log(i, formActions.controls[i].registerOnChange)}} -->
 			</div>
 			<div class="list-item add-action" (click)="addDefaultAction()">
 				<h2 class="placeholder">add action</h2>
 			</div>
 		</div>
-		<h2>Collaborators</h2>
+		<!-- <h2>Collaborators</h2> -->
 		<button class="button">Create</button>
 	</form>
 </div>
