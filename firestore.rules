@@ -3,11 +3,28 @@ service cloud.firestore {
 	match /databases/{database}/documents {
 
 		match /spotifyCredentials/{uid} {
+			// Can only access your own credentials
 			allow read, write: if request.auth.uid == uid;
 		}
 
-		match /{document=**} {
-			allow read, write: if request.auth.uid != null;
+		match /filteredPlaylists/{playlistId} {
+			// Can only modify playlists you created
+			allow write: if resource.data.keys().hasOnly(['createdBy', 'originId']) && request.auth.uid == resource.data.createdBy
+			allow read: if request.auth.uid == resource.data.createdBy
+
+			match /criteria/{criteriaId} {
+				// Can only add criteria to playlists you created
+				allow write: if resource.data.keys().hasOnly(['order', 'purpose', 'description'])
+					&& request.auth.uid == get(/databases/$(database)/documents/filteredPlaylists/$(playlistId)).data.createdBy
+				allow read: if request.auth.uid == get(/databases/$(database)/documents/filteredPlaylists/$(playlistId)).data.createdBy
+			}
+
+			match /actions/{actionId} {
+				// Can only add actions to playlists you created
+				allow write: if resource.data.keys().hasOnly(['order', 'ifType', 'ifId', 'thenType', 'thenId'])
+					&& request.auth.uid == get(/databases/$(database)/documents/filteredPlaylists/$(playlistId)).data.createdBy
+				allow read: if request.auth.uid == get(/databases/$(database)/documents/filteredPlaylists/$(playlistId)).data.createdBy
+			}
 		}
 
 	}
