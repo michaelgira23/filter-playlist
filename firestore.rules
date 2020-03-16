@@ -19,7 +19,7 @@ service cloud.firestore {
 				&& request.auth.uid == request.resource.data.createdBy;
 			allow update: if request.resource.data.keys().hasOnly(['createdBy', 'originId'])
 				&& isOgUser();
-			allow read: if isOgUser();
+			allow read, delete: if isOgUser();
 		}
 
 		function authorizedPlaylist(playlistId) {
@@ -33,7 +33,7 @@ service cloud.firestore {
 				&& authorizedPlaylist(request.resource.data.playlistId);
 			allow update: if request.resource.data.keys().hasOnly(['playlistId', 'order', 'purpose', 'description'])
 				&& authorizedPlaylist(resource.data.playlistId);
-			allow read: if authorizedPlaylist(resource.data.playlistId);
+			allow read, delete: if authorizedPlaylist(resource.data.playlistId);
 		}
 
 		match /filterActions/{actionId} {
@@ -42,7 +42,7 @@ service cloud.firestore {
 				&& authorizedPlaylist(request.resource.data.playlistId);
 			allow update: if request.resource.data.keys().hasOnly(['playlistId', 'order', 'ifType', 'ifId', 'thenType', 'thenId'])
 				&& authorizedPlaylist(resource.data.playlistId);
-			allow read: if authorizedPlaylist(resource.data.playlistId);
+			allow read, delete: if authorizedPlaylist(resource.data.playlistId);
 		}
 
 	}

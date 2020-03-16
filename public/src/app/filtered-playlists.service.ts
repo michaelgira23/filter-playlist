@@ -97,8 +97,14 @@ export class FilteredPlaylistsService {
 			}),
 			first(),
 			switchMap(([dbActions, dbCriteria]) => {
+				// List what actions/criteria are in the database
 				const existingActionIds = dbActions.map(action => action.payload.doc.id);
 				const existingCriteriaIds = dbCriteria.map(criterion => criterion.payload.doc.id);
+
+				// Which actions/criteria to keep and not delete
+				const keepActions: { [id: string]: true } = {};
+				const keepCriteria: { [id: string]: true } = {};
+
 				const batch = this.afs.firestore.batch();
 
 				console.log('existing crit ids', existingCriteriaIds);
@@ -116,6 +122,7 @@ export class FilteredPlaylistsService {
 					if (existingCriteriaIds.includes(formCriterion.id)) {
 						exists = true;
 						criteriaId = formCriterion.id;
+						keepCriteria[criteriaId] = true;
 					} else {
 						exists = false;
 						criteriaId = this.afs.createId();
@@ -141,6 +148,14 @@ export class FilteredPlaylistsService {
 					});
 				}
 
+				// Delete criteria that aren't in form
+				for (const criteriaId of existingCriteriaIds) {
+					if (!keepCriteria[criteriaId]) {
+						const docRef = criteriaCollection.doc(criteriaId).ref;
+						batch.delete(docRef);
+					}
+				}
+
 				/**
 				 * Insert actions into the database
 				 */
@@ -150,15 +165,16 @@ export class FilteredPlaylistsService {
 
 					// Get existing document reference or create a new one
 					let exists: boolean;
-					let criteriaId: string;
+					let actionId: string;
 					if (existingActionIds.includes(formAction.id)) {
 						exists = true;
-						criteriaId = formAction.id;
+						actionId = formAction.id;
+						keepActions[actionId] = true;
 					} else {
 						exists = false;
-						criteriaId = this.afs.createId();
+						actionId = this.afs.createId();
 					}
-					const docRef = actionsCollection.doc(criteriaId).ref;
+					const docRef = actionsCollection.doc(actionId).ref;
 
 					// Check if form action is invalid
 					if (!ensureActionParameters(formAction)) {
@@ -178,6 +194,16 @@ export class FilteredPlaylistsService {
 						thenType: formAction.thenType,
 						thenId: formAction.thenId
 					});
+				}
+
+				// Delete actions that aren't in form
+				for (const actionId of existingActionIds) {
+					console.log('delete action id?', actionId);
+					if (!keepActions[actionId]) {
+						console.log('YESSS!!!!');
+						const docRef = actionsCollection.doc(actionId).ref;
+						batch.delete(docRef);
+					}
 				}
 
 				return from(batch.commit());
