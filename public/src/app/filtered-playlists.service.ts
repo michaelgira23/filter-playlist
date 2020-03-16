@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/auth';
-import { AngularFirestore, AngularFirestoreCollection, DocumentChangeAction } from '@angular/fire/firestore';
-import { of } from 'rxjs';
+import { AngularFirestore, AngularFirestoreCollection, DocumentChangeAction, DocumentReference } from '@angular/fire/firestore';
+import { from, of } from 'rxjs';
 import { switchMap, map, first, tap } from 'rxjs/operators';
 
+import { Criteria } from '../model/criteria';
 import { FilteredPlaylist, UpsertFilteredPlaylist, FirebaseFilteredPlaylist } from '../model/filtered-playlist';
 
 @Injectable({
@@ -25,8 +26,12 @@ export class FilteredPlaylistsService {
 	}
 
 	// getPlaylist(id: string) {
-	// 	return this.filteredPlaylistsCollection.valueChanges();
+	// 	return this.filteredPlaylistsCollection.doc<FirebaseFilteredPlaylist>(id);
 	// }
+
+	getCriteria(playlistId: string) {
+		return this.afs.collection<Criteria>(`filteredPlaylists/${playlistId}/criteria`);
+	}
 
 	upsert(playlist: UpsertFilteredPlaylist) {
 
@@ -35,6 +40,7 @@ export class FilteredPlaylistsService {
 			originId: playlist.originId
 		};
 
+		let criteriaCollection: AngularFirestoreCollection<Criteria>;
 		return of(playlist.id).pipe(
 			switchMap(id => {
 				if (id) {
@@ -55,39 +61,60 @@ export class FilteredPlaylistsService {
 			// Update or add playlist
 			switchMap(exists => {
 				if (exists) {
-					console.log('already exists, update');
-					return this.filteredPlaylistsCollection.doc<FirebaseFilteredPlaylist>(playlist.id).update(firebasePlaylist);
+					return from(
+						this.filteredPlaylistsCollection.doc<FirebaseFilteredPlaylist>(playlist.id).update(firebasePlaylist)
+					).pipe(
+						// Make sure we still return the document reference for the next step
+						map(() => this.filteredPlaylistsCollection.doc<FirebaseFilteredPlaylist>(playlist.id).ref)
+					);
 				} else {
-					console.log('add');
 					return this.filteredPlaylistsCollection.add(firebasePlaylist);
 				}
 			}),
-			tap(result => {
-				console.log('result', result);
+			switchMap(docRef => {
+				// return docRef.collection('criteria').valueChanges();
+				criteriaCollection = this.getCriteria(docRef.id);
+				return criteriaCollection.snapshotChanges();
+			}),
+			first(),
+			switchMap(criteria => {
+				const existingCriteriaIds = criteria.map(criterion => criterion.payload.doc.id);
+				const batch = this.afs.firestore.batch();
+
+				let orderAt = 0;
+				for (const formCriterion of playlist.criteria) {
+
+					// Get existing document reference or create a new one
+					let exists: boolean;
+					let criteriaId: string;
+					if (existingCriteriaIds.includes(formCriterion.id)) {
+						exists = true;
+						criteriaId = formCriterion.id;
+					} else {
+						exists = false;
+						criteriaId = this.afs.createId();
+					}
+					const docRef = criteriaCollection.doc(criteriaId).ref;
+
+					// Check if form criteria is invalid
+					if (!formCriterion.purpose && !formCriterion.description) {
+						// If invalid criteria is already in database, delete in database too
+						if (exists) {
+							batch.delete(docRef);
+						}
+						continue;
+					}
+
+					// Update/create data at existing/new reference
+					batch.set(docRef, {
+						order: orderAt++,
+						purpose: formCriterion.purpose,
+						description: formCriterion.description
+					});
+				}
+
+				return from(batch.commit());
 			})
 		);
-		this.filteredPlaylistsCollection.doc(playlist.id);
-
-		if (playlist.id) {
-			this.filteredPlaylistsCollection.doc<FirebaseFilteredPlaylist>(playlist.id).update(firebasePlaylist);
-		} else {
-			this.filteredPlaylistsCollection.add(firebasePlaylist);
-		}
-
-		// Update criteria
-		for (const criterion of playlist.criteria) {
-			// Check if criterion is invalid
-			if (!criterion.purpose && !criterion.description) {
-				// If did exist before, delete
-				if (playlist.id) {
-
-				}
-				continue;
-			}
-		}
-	}
-
-	private deleteCriterion() {
-
 	}
 }

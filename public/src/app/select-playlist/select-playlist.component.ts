@@ -5,6 +5,7 @@ import { map } from 'rxjs/operators';
 
 import { FilteredPlaylist } from '../../model/filtered-playlist';
 import { FilteredPlaylistsService } from '../filtered-playlists.service';
+import { SpotifyService } from '../spotify.service';
 
 @Component({
 	selector: 'app-select-playlist',
@@ -13,20 +14,31 @@ import { FilteredPlaylistsService } from '../filtered-playlists.service';
 })
 export class SelectPlaylistComponent implements OnInit {
 
-	private filteredPlaylistsCollection: AngularFirestoreCollection<FilteredPlaylist>;
-	filteredPlaylists: Observable<any[]>;
+	filteredPlaylists$: Observable<any[]>;
+	spotifyPlaylists: { [id: string]: SpotifyApi.PlaylistObjectSimplified } = {};
 
-	constructor(private filteredPlaylistsService: FilteredPlaylistsService) {
+	constructor(private filteredPlaylistsService: FilteredPlaylistsService, private spotifyService: SpotifyService) {
 	}
 
 	ngOnInit() {
-		this.filteredPlaylists = this.filteredPlaylistsService.getMyPlaylists().snapshotChanges().pipe(
+		this.filteredPlaylists$ = this.filteredPlaylistsService.getMyPlaylists().snapshotChanges().pipe(
 			map(actions => actions.map(a => {
 				const data = a.payload.doc.data() as FilteredPlaylist;
 				const id = a.payload.doc.id;
 				return { id, data };
 			}))
 		);
+
+		this.spotifyService.getPlaylists().subscribe(response => {
+			this.spotifyPlaylists = {};
+			for (const playlist of response.playlists) {
+				this.spotifyPlaylists[playlist.id] = playlist;
+			}
+		});
+	}
+
+	getPlaylistName(id: string) {
+		return (this.spotifyPlaylists[id] && this.spotifyPlaylists[id].name) || '[PLAYLIST DELETED]';
 	}
 
 }

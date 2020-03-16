@@ -9,8 +9,15 @@ service cloud.firestore {
 
 		match /filteredPlaylists/{playlistId} {
 
+			// Check if user created the current filtered playlist
 			function isOgUser() {
 				return request.auth.uid != null && request.auth.uid == resource.data.createdBy;
+			}
+
+			// Check if user created the current filtered playlist (assumed parent)
+			// (Uses more expensive calculation that gets rate-limited)
+			function isOgParent() {
+				return request.auth.uid != null && request.auth.uid == get(/databases/$(database)/documents/filteredPlaylists/$(playlistId)).data.createdBy;
 			}
 
 			// Can only modify playlists you created
@@ -20,14 +27,14 @@ service cloud.firestore {
 
 			match /criteria/{criteriaId} {
 				// Can only add criteria to playlists you created
-				allow write: if isOgUser() && request.resource.data.keys().hasOnly(['order', 'purpose', 'description']);
-				allow read: if isOgUser();
+				allow write: if isOgParent() && request.resource.data.keys().hasOnly(['order', 'purpose', 'description']);
+				allow read: if isOgParent();
 			}
 
 			match /actions/{actionId} {
 				// Can only add actions to playlists you created
-				allow write: if isOgUser() && request.resource.data.keys().hasOnly(['order', 'ifType', 'ifId', 'thenType', 'thenId']);
-				allow read: if isOgUser();
+				allow write: if isOgParent() && request.resource.data.keys().hasOnly(['order', 'ifType', 'ifId', 'thenType', 'thenId']);
+				allow read: if isOgParent();
 			}
 		}
 

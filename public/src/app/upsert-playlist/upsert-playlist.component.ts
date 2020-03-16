@@ -62,10 +62,8 @@ export class UpsertPlaylistComponent implements OnInit {
 		this.addDefaultAction();
 
 		this.filteredPlaylist$ = this.route.paramMap.pipe(
-			// switchMap((params: ParamMap) => {
-
-			// })
-			map(params => params.get('id'))
+			map(params => params.get('id')),
+			// switchMap()
 		);
 
 		this.spotify.getPlaylists().subscribe(
