@@ -84,13 +84,19 @@ export class UpsertPlaylistComponent implements OnInit {
 
 				(this.form.controls.criteria as FormArray).clear();
 				for (const criteriaChangeAction of criteriaSnapshot) {
-					this.addCriteria(criteriaChangeAction.payload.doc.data());
+					this.addCriteria({
+						id: criteriaChangeAction.payload.doc.id,
+						...criteriaChangeAction.payload.doc.data()
+					});
 				}
 				this.onCriteriaChange();
 
 				(this.form.controls.actions as FormArray).clear();
 				for (const actionChangeAction of actionsSnapshot) {
-					this.addAction(actionChangeAction.payload.doc.data());
+					this.addAction({
+						id: actionChangeAction.payload.doc.id,
+						...actionChangeAction.payload.doc.data()
+					});
 				}
 			})
 		);
@@ -111,6 +117,7 @@ export class UpsertPlaylistComponent implements OnInit {
 	addCriteria(criteria?: Criteria) {
 		this.formCriteria.push(
 			this.fb.group({
+				id: [(criteria && criteria.id) || null],
 				purpose: [(criteria && criteria.purpose) || ''],
 				description: [(criteria && criteria.description) || '']
 			})
@@ -132,7 +139,9 @@ export class UpsertPlaylistComponent implements OnInit {
 		const criteria = this.formCriteria.controls;
 		const secondToLastCriterion = criteria[criteria.length - 2];
 		const lastCriterion = criteria[criteria.length - 1];
-		if (lastCriterion && lastCriterion.value.purpose.length) {
+		if (criteria.length < 1) {
+			this.addCriteria();
+		} else if (lastCriterion && lastCriterion.value.purpose.length) {
 			// Criteria all filled up; add another
 			this.addCriteria();
 		} else if (secondToLastCriterion && !secondToLastCriterion.value.purpose.length) {
@@ -156,6 +165,7 @@ export class UpsertPlaylistComponent implements OnInit {
 	 */
 	addDefaultAction() {
 		this.addAction({
+			id: null,
 			ifType: ActionIfType.ALL_PASSED,
 			ifId: null,
 			thenType: ActionThenType.ADD_TO_PLAYLIST,
@@ -168,6 +178,7 @@ export class UpsertPlaylistComponent implements OnInit {
 	 * @param action Action object with proper values
 	 */
 	addAction(action: Action) {
+		console.log('add acti', action);
 		this.formActions.push(
 			this.fb.group(action)
 		);

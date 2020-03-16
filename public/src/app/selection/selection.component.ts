@@ -26,7 +26,6 @@ export class SelectionComponent implements ControlValueAccessor, OnInit {
 	set search(fuse) {
 		this._search = fuse;
 		this.refreshSearch();
-		console.log('search reassigned', fuse);
 		this.mapInternalValueToDisplayValue();
 	}
 	// tslint:disable-next-line: variable-name
@@ -38,7 +37,6 @@ export class SelectionComponent implements ControlValueAccessor, OnInit {
 	}
 	set value(newValue: string) {
 		this.selectedInternalValue = newValue;
-		console.log('value updated', newValue);
 		this.mapInternalValueToDisplayValue();
 	}
 
@@ -127,7 +125,6 @@ export class SelectionComponent implements ControlValueAccessor, OnInit {
 	 * @param result Seach result selected
 	 */
 	onSelect(result: any) {
-		console.log('on select', result);
 		if (result) {
 			this.searchValue = result[this.displayKey];
 			this.selectedDisplayValue = result[this.displayKey];
@@ -146,12 +143,9 @@ export class SelectionComponent implements ControlValueAccessor, OnInit {
 	 * If the display value isn't known (i.e. rehydrating a form from existing selection), then look for original display value
 	 */
 	mapInternalValueToDisplayValue() {
-		console.log('map internal value', this.search);
 		if (this.search) {
 			for (const result of (this.search as any).list) {
-				console.log('comapre', result[this.valueKey], this.valueKey, this.selectedInternalValue);
 				if (result[this.valueKey] === this.selectedInternalValue) {
-					console.log('we found match!!!');
 					this.selectedDisplayValue = result[this.displayKey];
 					return;
 				}
@@ -201,12 +195,6 @@ export class SelectionComponent implements ControlValueAccessor, OnInit {
 	 */
 
 	writeValue(obj: string): void {
-		console.log('selection', obj);
-		// if (typeof obj === 'string') {
-		// 	this.onSelect({ [this.valueKey]: obj });
-		// } else {
-		// 	this.onSelect(obj);
-		// }
 		this.selectedInternalValue = obj;
 		this.mapInternalValueToDisplayValue();
 	}

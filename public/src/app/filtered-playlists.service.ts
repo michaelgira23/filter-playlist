@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/auth';
-import { AngularFirestore, AngularFirestoreCollection, DocumentChangeAction, DocumentReference } from '@angular/fire/firestore';
+import { AngularFirestore, AngularFirestoreCollection, DocumentChangeAction, DocumentReference, DocumentSnapshot } from '@angular/fire/firestore';
 import { combineLatest, from, of } from 'rxjs';
 import { switchMap, map, first } from 'rxjs/operators';
 
@@ -34,14 +34,14 @@ export class FilteredPlaylistsService {
 	getActions(playlistId: string) {
 		return this.afs.collection<FirebaseAction>(
 			'filterActions',
-			ref => ref.where('playlistId', '==', playlistId)
+			ref => ref.where('playlistId', '==', playlistId).orderBy('order')
 		);
 	}
 
 	getCriteria(playlistId: string) {
 		return this.afs.collection<FirebaseCriteria>(
 			'filterCriteria',
-			ref => ref.where('playlistId', '==', playlistId)
+			ref => ref.where('playlistId', '==', playlistId).orderBy('order')
 		);
 	}
 
@@ -65,11 +65,14 @@ export class FilteredPlaylistsService {
 			}),
 			first(),
 			// Determine whether playlist exists
-			map((playlistRef: DocumentChangeAction<FirebaseFilteredPlaylist>) => {
+			map((playlistRef: DocumentChangeAction<FirebaseFilteredPlaylist> | DocumentSnapshot<FirebaseFilteredPlaylist>) => {
+				console.log('get filtered p', playlistRef);
 				if (playlistRef === null) {
 					return false;
+				} else if (typeof (playlistRef as DocumentSnapshot<FirebaseFilteredPlaylist>).exists === 'boolean') {
+					return (playlistRef as DocumentSnapshot<FirebaseFilteredPlaylist>).exists;
 				} else {
-					return playlistRef.payload.doc.exists;
+					return (playlistRef as DocumentChangeAction<FirebaseFilteredPlaylist>).payload.doc.exists;
 				}
 			}),
 			// Update or add playlist
@@ -90,13 +93,15 @@ export class FilteredPlaylistsService {
 				playlistDoc = playlistDocRef;
 				actionsCollection = this.getActions(playlistDocRef.id);
 				criteriaCollection = this.getCriteria(playlistDocRef.id);
-				return combineLatest(criteriaCollection.snapshotChanges(), actionsCollection.snapshotChanges());
+				return combineLatest(actionsCollection.snapshotChanges(), criteriaCollection.snapshotChanges());
 			}),
 			first(),
 			switchMap(([dbActions, dbCriteria]) => {
-				const existingActionIds = dbCriteria.map(criterion => criterion.payload.doc.id);
-				const existingCriteriaIds = dbActions.map(action => action.payload.doc.id);
+				const existingActionIds = dbActions.map(action => action.payload.doc.id);
+				const existingCriteriaIds = dbCriteria.map(criterion => criterion.payload.doc.id);
 				const batch = this.afs.firestore.batch();
+
+				console.log('existing crit ids', existingCriteriaIds);
 
 				/**
 				 * Insert criteria into the database
@@ -104,7 +109,7 @@ export class FilteredPlaylistsService {
 
 				let orderCriteriaAt = 0;
 				for (const formCriterion of playlist.criteria) {
-
+					console.log('id exists?', formCriterion.id);
 					// Get existing document reference or create a new one
 					let exists: boolean;
 					let criteriaId: string;
@@ -115,6 +120,7 @@ export class FilteredPlaylistsService {
 						exists = false;
 						criteriaId = this.afs.createId();
 					}
+					console.log('exists?', exists, 'id', criteriaId);
 					const docRef = criteriaCollection.doc(criteriaId).ref;
 
 					// Check if form criteria is invalid
