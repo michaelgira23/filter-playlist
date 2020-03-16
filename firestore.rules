@@ -14,11 +14,11 @@ service cloud.firestore {
 				return request.auth.uid != null && request.auth.uid == resource.data.createdBy;
 			}
 
-			allow create: if request.auth.uid != null
-				&& request.auth.uid == request.resource.data.createdBy
-				&& request.resource.data.keys().hasOnly(['createdBy', 'originId']);
-			allow update: if isOgUser()
-				&& request.resource.data.keys().hasOnly(['createdBy', 'originId']);
+			allow create: if request.resource.data.keys().hasOnly(['createdBy', 'originId'])
+				&& request.auth.uid != null
+				&& request.auth.uid == request.resource.data.createdBy;
+			allow update: if request.resource.data.keys().hasOnly(['createdBy', 'originId'])
+				&& isOgUser();
 			allow read: if isOgUser();
 		}
 
@@ -29,19 +29,19 @@ service cloud.firestore {
 
 		match /filterCriteria/{criteriaId} {
 
-			allow create: if authorizedPlaylist(request.resource.data.playlistId)
-				&& request.resource.data.keys().hasOnly(['playlistId', 'order', 'purpose', 'description']);
-			allow update: if authorizedPlaylist(resource.data.playlistId)
-				&& request.resource.data.keys().hasOnly(['playlistId', 'order', 'purpose', 'description']);
+			allow create: if request.resource.data.keys().hasOnly(['playlistId', 'order', 'purpose', 'description'])
+				&& authorizedPlaylist(request.resource.data.playlistId);
+			allow update: if request.resource.data.keys().hasOnly(['playlistId', 'order', 'purpose', 'description'])
+				&& authorizedPlaylist(resource.data.playlistId);
 			allow read: if authorizedPlaylist(resource.data.playlistId);
 		}
 
 		match /filterActions/{actionId} {
 
-			allow create: if authorizedPlaylist(request.resource.data.playlistId)
-				&& request.resource.data.keys().hasOnly(['playlistId', 'order', 'ifType', 'ifId', 'thenType', 'thenId']);
-			allow update: if authorizedPlaylist(resource.data.playlistId)
-				&& request.resource.data.keys().hasOnly(['playlistId', 'order', 'ifType', 'ifId', 'thenType', 'thenId']);
+			allow create: if request.resource.data.keys().hasOnly(['playlistId', 'order', 'ifType', 'ifId', 'thenType', 'thenId'])
+				&& authorizedPlaylist(request.resource.data.playlistId);
+			allow update: if request.resource.data.keys().hasOnly(['playlistId', 'order', 'ifType', 'ifId', 'thenType', 'thenId'])
+				&& authorizedPlaylist(resource.data.playlistId);
 			allow read: if authorizedPlaylist(resource.data.playlistId);
 		}
 
