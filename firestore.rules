@@ -14,28 +14,35 @@ service cloud.firestore {
 				return request.auth.uid != null && request.auth.uid == resource.data.createdBy;
 			}
 
-			// Check if user created the current filtered playlist (assumed parent)
-			// (Uses more expensive calculation that gets rate-limited)
-			function isOgParent() {
-				return request.auth.uid != null && request.auth.uid == get(/databases/$(database)/documents/filteredPlaylists/$(playlistId)).data.createdBy;
-			}
-
-			// Can only modify playlists you created
-			allow create: if request.resource.data.keys().hasOnly(['createdBy', 'originId']) && request.auth.uid != null;
-			allow write: if isOgUser() && request.resource.data.keys().hasOnly(['createdBy', 'originId']);
+			allow create: if request.auth.uid != null
+				&& request.auth.uid == request.resource.data.createdBy
+				&& request.resource.data.keys().hasOnly(['createdBy', 'originId']);
+			allow update: if isOgUser()
+				&& request.resource.data.keys().hasOnly(['createdBy', 'originId']);
 			allow read: if isOgUser();
+		}
 
-			match /criteria/{criteriaId} {
-				// Can only add criteria to playlists you created
-				allow write: if isOgParent() && request.resource.data.keys().hasOnly(['order', 'purpose', 'description']);
-				allow read: if isOgParent();
-			}
+		function authorizedPlaylist(playlistId) {
+			return request.auth.uid != null
+				&& request.auth.uid == get(/databases/$(database)/documents/filteredPlaylists/$(playlistId)).data.createdBy;
+		}
 
-			match /actions/{actionId} {
-				// Can only add actions to playlists you created
-				allow write: if isOgParent() && request.resource.data.keys().hasOnly(['order', 'ifType', 'ifId', 'thenType', 'thenId']);
-				allow read: if isOgParent();
-			}
+		match /filterCriteria/{criteriaId} {
+
+			allow create: if authorizedPlaylist(request.resource.data.playlistId)
+				&& request.resource.data.keys().hasOnly(['playlistId', 'order', 'purpose', 'description']);
+			allow update: if authorizedPlaylist(resource.data.playlistId)
+				&& request.resource.data.keys().hasOnly(['playlistId', 'order', 'purpose', 'description']);
+			allow read: if authorizedPlaylist(resource.data.playlistId);
+		}
+
+		match /filterActions/{actionId} {
+
+			allow create: if authorizedPlaylist(request.resource.data.playlistId)
+				&& request.resource.data.keys().hasOnly(['playlistId', 'order', 'ifType', 'ifId', 'thenType', 'thenId']);
+			allow update: if authorizedPlaylist(resource.data.playlistId)
+				&& request.resource.data.keys().hasOnly(['playlistId', 'order', 'ifType', 'ifId', 'thenType', 'thenId']);
+			allow read: if authorizedPlaylist(resource.data.playlistId);
 		}
 
 	}

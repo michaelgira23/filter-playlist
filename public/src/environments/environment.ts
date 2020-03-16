@@ -7,7 +7,8 @@ export const environment = {
 	firebase: {
 		apiKey: 'AIzaSyAShc3QStFtr1VMusoJYTYZFHlb_IkcNSc',
 		authDomain: 'filter-playlist.firebaseapp.com',
-		databaseURL: 'https://filter-playlist.firebaseio.com',
+		// databaseURL: 'https://filter-playlist.firebaseio.com',
+		databaseURL: 'http://localhost:8080',
 		projectId: 'filter-playlist',
 		storageBucket: 'filter-playlist.appspot.com',
 		messagingSenderId: '767916801008',

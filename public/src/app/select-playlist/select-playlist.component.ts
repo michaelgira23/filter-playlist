@@ -29,6 +29,7 @@ export class SelectPlaylistComponent implements OnInit {
 			}))
 		);
 
+		// Index Spotify playlists by their id
 		this.spotifyService.getPlaylists().subscribe(response => {
 			this.spotifyPlaylists = {};
 			for (const playlist of response.playlists) {

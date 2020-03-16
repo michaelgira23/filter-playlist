@@ -5,6 +5,7 @@ export interface Criteria {
 }
 
 export interface FirebaseCriteria {
+	playlistId: string;
 	order: number;
 	purpose: string;
 	description: string;

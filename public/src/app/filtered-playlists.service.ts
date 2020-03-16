@@ -32,11 +32,17 @@ export class FilteredPlaylistsService {
 	// }
 
 	getActions(playlistId: string) {
-		return this.afs.collection<FirebaseAction>(`filteredPlaylists/${playlistId}/actions`);
+		return this.afs.collection<FirebaseAction>(
+			'filterActions',
+			ref => ref.where('playlistId', '==', playlistId)
+		);
 	}
 
 	getCriteria(playlistId: string) {
-		return this.afs.collection<FirebaseCriteria>(`filteredPlaylists/${playlistId}/criteria`);
+		return this.afs.collection<FirebaseCriteria>(
+			'filterCriteria',
+			ref => ref.where('playlistId', '==', playlistId)
+		);
 	}
 
 	upsert(playlist: UpsertFilteredPlaylist) {
@@ -46,6 +52,7 @@ export class FilteredPlaylistsService {
 			originId: playlist.originId
 		};
 
+		let playlistDoc: DocumentReference;
 		let actionsCollection: AngularFirestoreCollection<FirebaseAction>;
 		let criteriaCollection: AngularFirestoreCollection<FirebaseCriteria>;
 		return of(playlist.id).pipe(
@@ -67,6 +74,7 @@ export class FilteredPlaylistsService {
 			}),
 			// Update or add playlist
 			switchMap(exists => {
+				console.log('update playlist or add');
 				if (exists) {
 					return from(
 						this.filteredPlaylistsCollection.doc<FirebaseFilteredPlaylist>(playlist.id).update(firebasePlaylist)
@@ -79,15 +87,21 @@ export class FilteredPlaylistsService {
 				}
 			}),
 			// Get existing critieria to see which to delete
-			switchMap(docRef => {
-				actionsCollection = this.getActions(docRef.id);
-				criteriaCollection = this.getCriteria(docRef.id);
+			switchMap(playlistDocRef => {
+				console.log('get existing criteria and actions for', playlistDocRef.id);
+				playlistDoc = playlistDocRef;
+				actionsCollection = this.getActions(playlistDocRef.id);
+				criteriaCollection = this.getCriteria(playlistDocRef.id);
 				return combineLatest(criteriaCollection.snapshotChanges(), actionsCollection.snapshotChanges());
 			}),
 			first(),
 			switchMap(([dbActions, dbCriteria]) => {
-				const existingCriteriaIds = dbCriteria.map(criterion => criterion.payload.doc.id);
+				console.log('add new stuff');
+				const existingActionIds = dbCriteria.map(criterion => criterion.payload.doc.id);
+				const existingCriteriaIds = dbActions.map(action => action.payload.doc.id);
 				const batch = this.afs.firestore.batch();
+
+				let operations = 0;
 
 				/**
 				 * Insert criteria into the database
@@ -112,13 +126,16 @@ export class FilteredPlaylistsService {
 					if (!formCriterion.purpose && !formCriterion.description) {
 						// If invalid criteria is already in database, delete in database too
 						if (exists) {
+							operations++;
 							batch.delete(docRef);
 						}
 						continue;
 					}
 
 					// Update/create data at existing/new reference
+					operations++;
 					batch.set(docRef, {
+						playlistId: playlistDoc.id,
 						order: orderCriteriaAt++,
 						purpose: formCriterion.purpose,
 						description: formCriterion.description
@@ -135,7 +152,7 @@ export class FilteredPlaylistsService {
 					// Get existing document reference or create a new one
 					let exists: boolean;
 					let criteriaId: string;
-					if (existingCriteriaIds.includes(formAction.id)) {
+					if (existingActionIds.includes(formAction.id)) {
 						exists = true;
 						criteriaId = formAction.id;
 					} else {
@@ -148,13 +165,16 @@ export class FilteredPlaylistsService {
 					if (!ensureActionParameters(formAction)) {
 						// If invalid action is already in database, delete in database too
 						if (exists) {
+							operations++;
 							batch.delete(docRef);
 						}
 						continue;
 					}
 
 					// Update/create data at existing/new reference
+					operations++;
 					batch.set(docRef, {
+						playlistId: playlistDoc.id,
 						order: orderActionsAt++,
 						ifType: formAction.ifType,
 						ifId: formAction.ifId,
@@ -162,6 +182,8 @@ export class FilteredPlaylistsService {
 						thenId: formAction.thenId
 					});
 				}
+
+				console.log(`batch has ${operations} operations`);
 
 				return from(batch.commit());
 			})
