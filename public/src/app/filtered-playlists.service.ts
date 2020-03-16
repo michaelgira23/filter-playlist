@@ -1,11 +1,13 @@
 import { Injectable } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/auth';
 import { AngularFirestore, AngularFirestoreCollection, DocumentChangeAction, DocumentReference } from '@angular/fire/firestore';
-import { from, of } from 'rxjs';
-import { switchMap, map, first, tap } from 'rxjs/operators';
+import { combineLatest, from, of } from 'rxjs';
+import { switchMap, map, first } from 'rxjs/operators';
 
-import { Criteria } from '../model/criteria';
+import { FirebaseAction } from '../model/actions';
+import { FirebaseCriteria } from '../model/criteria';
 import { FilteredPlaylist, UpsertFilteredPlaylist, FirebaseFilteredPlaylist } from '../model/filtered-playlist';
+import { ensureActionParameters } from './validators/actions.validator';
 
 @Injectable({
 	providedIn: 'root'
@@ -29,8 +31,12 @@ export class FilteredPlaylistsService {
 	// 	return this.filteredPlaylistsCollection.doc<FirebaseFilteredPlaylist>(id);
 	// }
 
+	getActions(playlistId: string) {
+		return this.afs.collection<FirebaseAction>(`filteredPlaylists/${playlistId}/actions`);
+	}
+
 	getCriteria(playlistId: string) {
-		return this.afs.collection<Criteria>(`filteredPlaylists/${playlistId}/criteria`);
+		return this.afs.collection<FirebaseCriteria>(`filteredPlaylists/${playlistId}/criteria`);
 	}
 
 	upsert(playlist: UpsertFilteredPlaylist) {
@@ -40,7 +46,8 @@ export class FilteredPlaylistsService {
 			originId: playlist.originId
 		};
 
-		let criteriaCollection: AngularFirestoreCollection<Criteria>;
+		let actionsCollection: AngularFirestoreCollection<FirebaseAction>;
+		let criteriaCollection: AngularFirestoreCollection<FirebaseCriteria>;
 		return of(playlist.id).pipe(
 			switchMap(id => {
 				if (id) {
@@ -71,17 +78,22 @@ export class FilteredPlaylistsService {
 					return this.filteredPlaylistsCollection.add(firebasePlaylist);
 				}
 			}),
+			// Get existing critieria to see which to delete
 			switchMap(docRef => {
-				// return docRef.collection('criteria').valueChanges();
+				actionsCollection = this.getActions(docRef.id);
 				criteriaCollection = this.getCriteria(docRef.id);
-				return criteriaCollection.snapshotChanges();
+				return combineLatest(criteriaCollection.snapshotChanges(), actionsCollection.snapshotChanges());
 			}),
 			first(),
-			switchMap(criteria => {
-				const existingCriteriaIds = criteria.map(criterion => criterion.payload.doc.id);
+			switchMap(([dbActions, dbCriteria]) => {
+				const existingCriteriaIds = dbCriteria.map(criterion => criterion.payload.doc.id);
 				const batch = this.afs.firestore.batch();
 
-				let orderAt = 0;
+				/**
+				 * Insert criteria into the database
+				 */
+
+				let orderCriteriaAt = 0;
 				for (const formCriterion of playlist.criteria) {
 
 					// Get existing document reference or create a new one
@@ -107,9 +119,47 @@ export class FilteredPlaylistsService {
 
 					// Update/create data at existing/new reference
 					batch.set(docRef, {
-						order: orderAt++,
+						order: orderCriteriaAt++,
 						purpose: formCriterion.purpose,
 						description: formCriterion.description
+					});
+				}
+
+				/**
+				 * Insert actions into the database
+				 */
+
+				let orderActionsAt = 0;
+				for (const formAction of playlist.actions) {
+
+					// Get existing document reference or create a new one
+					let exists: boolean;
+					let criteriaId: string;
+					if (existingCriteriaIds.includes(formAction.id)) {
+						exists = true;
+						criteriaId = formAction.id;
+					} else {
+						exists = false;
+						criteriaId = this.afs.createId();
+					}
+					const docRef = actionsCollection.doc(criteriaId).ref;
+
+					// Check if form action is invalid
+					if (!ensureActionParameters(formAction)) {
+						// If invalid action is already in database, delete in database too
+						if (exists) {
+							batch.delete(docRef);
+						}
+						continue;
+					}
+
+					// Update/create data at existing/new reference
+					batch.set(docRef, {
+						order: orderActionsAt++,
+						ifType: formAction.ifType,
+						ifId: formAction.ifId,
+						thenType: formAction.thenType,
+						thenId: formAction.thenId
 					});
 				}
 

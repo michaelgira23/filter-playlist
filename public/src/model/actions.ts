@@ -6,6 +6,14 @@ export interface Action {
 	thenId: string | null;
 }
 
+export interface FirebaseAction {
+	order: number;
+	ifType: ActionIfType;
+	ifId: string | null;
+	thenType: ActionThenType;
+	thenId: string | null;
+}
+
 /**
  * Define "if"s for triggering actions
  */

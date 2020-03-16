@@ -14,7 +14,7 @@ export function ValidateActions(control: AbstractControl) {
  * Returns true if the provided (serialized) action is valid
  * @param action Serialized action
  */
-function ensureActionParameters(action: Action) {
+export function ensureActionParameters(action: Action) {
 	if (action.thenType === ActionThenType.ADD_TO_PLAYLIST && !action.thenId) {
 		return false;
 	}
