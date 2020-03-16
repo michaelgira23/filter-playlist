@@ -14,7 +14,7 @@
 		<option [value]="ActionThenType.REMOVE_FROM_CURRENT_PLAYLIST">remove from current playlist</option>
 	</select>
 	<app-selection *ngIf="action.thenType === ActionThenType.ADD_TO_PLAYLIST" selectionLabel="Playlist" [create]="true"
-		[onCreate]="createPlaylist.bind(this)" [search]="searchPlaylists" [value]="thenPlaylist?.name || ''"
-		(selectValue)="onThenPlaylistSelected($event)" displayKey="name">
+		[onCreate]="createPlaylist.bind(this)" [search]="searchPlaylists" [value]="action.thenId"
+		(selectValue)="onThenPlaylistSelected($event)" valueKey="id" displayKey="name">
 	</app-selection>
 </h2>

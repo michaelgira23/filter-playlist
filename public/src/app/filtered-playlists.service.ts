@@ -27,9 +27,9 @@ export class FilteredPlaylistsService {
 		);
 	}
 
-	// getPlaylist(id: string) {
-	// 	return this.filteredPlaylistsCollection.doc<FirebaseFilteredPlaylist>(id);
-	// }
+	getPlaylist(playlistId: string) {
+		return this.filteredPlaylistsCollection.doc<FirebaseFilteredPlaylist>(playlistId);
+	}
 
 	getActions(playlistId: string) {
 		return this.afs.collection<FirebaseAction>(
@@ -74,7 +74,6 @@ export class FilteredPlaylistsService {
 			}),
 			// Update or add playlist
 			switchMap(exists => {
-				console.log('update playlist or add');
 				if (exists) {
 					return from(
 						this.filteredPlaylistsCollection.doc<FirebaseFilteredPlaylist>(playlist.id).update(firebasePlaylist)
@@ -88,7 +87,6 @@ export class FilteredPlaylistsService {
 			}),
 			// Get existing critieria to see which to delete
 			switchMap(playlistDocRef => {
-				console.log('get existing criteria and actions for', playlistDocRef.id);
 				playlistDoc = playlistDocRef;
 				actionsCollection = this.getActions(playlistDocRef.id);
 				criteriaCollection = this.getCriteria(playlistDocRef.id);
@@ -96,12 +94,9 @@ export class FilteredPlaylistsService {
 			}),
 			first(),
 			switchMap(([dbActions, dbCriteria]) => {
-				console.log('add new stuff');
 				const existingActionIds = dbCriteria.map(criterion => criterion.payload.doc.id);
 				const existingCriteriaIds = dbActions.map(action => action.payload.doc.id);
 				const batch = this.afs.firestore.batch();
-
-				let operations = 0;
 
 				/**
 				 * Insert criteria into the database
@@ -126,14 +121,12 @@ export class FilteredPlaylistsService {
 					if (!formCriterion.purpose && !formCriterion.description) {
 						// If invalid criteria is already in database, delete in database too
 						if (exists) {
-							operations++;
 							batch.delete(docRef);
 						}
 						continue;
 					}
 
 					// Update/create data at existing/new reference
-					operations++;
 					batch.set(docRef, {
 						playlistId: playlistDoc.id,
 						order: orderCriteriaAt++,
@@ -165,14 +158,12 @@ export class FilteredPlaylistsService {
 					if (!ensureActionParameters(formAction)) {
 						// If invalid action is already in database, delete in database too
 						if (exists) {
-							operations++;
 							batch.delete(docRef);
 						}
 						continue;
 					}
 
 					// Update/create data at existing/new reference
-					operations++;
 					batch.set(docRef, {
 						playlistId: playlistDoc.id,
 						order: orderActionsAt++,
@@ -182,8 +173,6 @@ export class FilteredPlaylistsService {
 						thenId: formAction.thenId
 					});
 				}
-
-				console.log(`batch has ${operations} operations`);
 
 				return from(batch.commit());
 			})

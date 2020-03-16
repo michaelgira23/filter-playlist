@@ -21,13 +21,11 @@ export class LoginComponent implements OnInit {
 	ngOnInit() {
 		this.route.queryParams.pipe(
 			filter(params => {
-				console.log('url params', params, !!params.error, params.code);
 				if (params.error) {
 					console.log('Spotify Error:', params.error);
 					this.loading = false;
 					return false;
 				} else if (params.code) {
-					console.log('javascript token!', params.code);
 					this.loading = true;
 					return true;
 				}
@@ -37,7 +35,6 @@ export class LoginComponent implements OnInit {
 			switchMap(params => this.verifyToken(params.code, params.state))
 		).subscribe(
 			async token => {
-				console.log('token', token);
 				await this.afAuth.auth.signInWithCustomToken(token);
 				this.router.navigate(['/']);
 			},
@@ -52,7 +49,6 @@ export class LoginComponent implements OnInit {
 	}
 
 	login() {
-		console.log('Log in!');
 		window.location.href = `${environment.firebaseFunctionsHost}/widgets/login`;
 	}
 

@@ -26,6 +26,20 @@ export class SelectionComponent implements ControlValueAccessor, OnInit {
 	set search(fuse) {
 		this._search = fuse;
 		this.refreshSearch();
+		console.log('search reassigned', fuse);
+		this.mapInternalValueToDisplayValue();
+	}
+	// tslint:disable-next-line: variable-name
+	private _search: Fuse<any, Fuse.FuseOptions<any>>;
+
+	@Input()
+	get value() {
+		return this.selectedInternalValue;
+	}
+	set value(newValue: string) {
+		this.selectedInternalValue = newValue;
+		console.log('value updated', newValue);
+		this.mapInternalValueToDisplayValue();
 	}
 
 	constructor() { }
@@ -37,35 +51,35 @@ export class SelectionComponent implements ControlValueAccessor, OnInit {
 	@Input() selectionLabel: string;
 	// What property in the fuzzy search we should display in the results
 	@Input() displayKey: string;
-	// What property in the fuzzy search we should use as the input value
+	// What property in the fuzzy search we should use as the output value
 	@Input() valueKey: string;
 	// Whether to allow option to create a new thing too
 	@Input() create = false;
 	// Value of the text input
-	@Input() value = '';
+	@Input() searchValue = '';
 	// What to display if no results found
 	@Input() emptyMessage = 'Sorry! No results found.';
-	// tslint:disable-next-line: variable-name
-	private _search: Fuse<any, Fuse.FuseOptions<any>>;
-
 	// Search results to display
 	searchResults: any[] = [];
-
 	// Event when value selected
 	@Output() selectValue = new EventEmitter<any>();
-	// Value officially "selected" by the input
-	selectedValue: string = null;
-
+	// Value officially selected to display
+	selectedDisplayValue: string = null;
+	// Value officially selected as the form output
+	selectedInternalValue: string = null;
+	// Whether or not to show the search bar/results
 	modal = false;
+	// Keeps track of result if user tabs into it to select it
 	private focusResult: any = null;
+
 	// Callback for creating something.
 	/** @TODO If there's a more "Angular" way to do this without too many limitations */
 	@Input() onCreate: (value: string) => Observable<any> = () => of(null);
 
 	ngOnInit() {
 		// If parent inputted value, display that
-		if (this.value) {
-			this.selectedValue = this.value;
+		if (this.searchValue) {
+			this.selectedDisplayValue = this.searchValue;
 		}
 	}
 
@@ -79,7 +93,6 @@ export class SelectionComponent implements ControlValueAccessor, OnInit {
 					break;
 				// Select first option on enter
 				case 'Enter':
-					console.log('enter');
 					if (this.focusResult) {
 						this.onSelect(this.focusResult);
 					} else if (this.searchResults.length >= 1) {
@@ -92,34 +105,66 @@ export class SelectionComponent implements ControlValueAccessor, OnInit {
 		}
 	}
 
+	/**
+	 * Refresh the given results once we have more data
+	 */
 	refreshSearch() {
-		this.onSearch(this.value);
+		this.onSearch(this.searchValue);
 	}
 
+	/**
+	 * Refresh the search results when user is typing
+	 * @param input Text in search input
+	 */
 	onSearch(input: string) {
 		if (this.search) {
 			this.searchResults = this.search.search(input);
 		}
 	}
 
+	/**
+	 * What happens when the user indicates they want to chose a given search result
+	 * @param result Seach result selected
+	 */
 	onSelect(result: any) {
+		console.log('on select', result);
 		if (result) {
-			this.value = result[this.displayKey];
-			this.selectedValue = result[this.displayKey];
+			this.searchValue = result[this.displayKey];
+			this.selectedDisplayValue = result[this.displayKey];
+			this.selectedInternalValue = result[this.valueKey];
 		} else {
-			this.value = '';
-			this.selectedValue = result;
+			this.searchValue = '';
+			this.selectedDisplayValue = result;
+			this.selectedInternalValue = result;
 		}
 		this.selectValue.emit(result);
 		this.hideModal();
 		this.refreshSearch();
 	}
 
+	/**
+	 * If the display value isn't known (i.e. rehydrating a form from existing selection), then look for original display value
+	 */
+	mapInternalValueToDisplayValue() {
+		console.log('map internal value', this.search);
+		if (this.search) {
+			for (const result of (this.search as any).list) {
+				console.log('comapre', result[this.valueKey], this.valueKey, this.selectedInternalValue);
+				if (result[this.valueKey] === this.selectedInternalValue) {
+					console.log('we found match!!!');
+					this.selectedDisplayValue = result[this.displayKey];
+					return;
+				}
+			}
+		}
+	}
+
+	/**
+	 * If specified, what happens if the user clicks the "Create" button with text in the search field
+	 */
 	onCreateButton() {
-		console.log('create with result', this.value);
-		this.onCreate(this.value).subscribe(
+		this.onCreate(this.searchValue).subscribe(
 			result => {
-				console.log('created thing', result);
 				this.onSelect(result);
 			},
 			err => {
@@ -128,10 +173,17 @@ export class SelectionComponent implements ControlValueAccessor, OnInit {
 		);
 	}
 
+	/**
+	 * Handler when the user tabs to a given search result
+	 * @param result Seach result selected
+	 */
 	onFocus(result: any) {
 		this.focusResult = result;
 	}
 
+	/**
+	 * Handler when the user tabs to a different given search result
+	 */
 	onUnfocus() {
 		this.focusResult = null;
 	}
@@ -148,17 +200,20 @@ export class SelectionComponent implements ControlValueAccessor, OnInit {
 	 * Add functionality as a Reactive Forms input
 	 */
 
-	writeValue(obj: any): void {
-		if (typeof obj === 'string') {
-			this.onSelect({ [this.displayKey]: obj });
-		} else {
-			this.onSelect(obj);
-		}
+	writeValue(obj: string): void {
+		console.log('selection', obj);
+		// if (typeof obj === 'string') {
+		// 	this.onSelect({ [this.valueKey]: obj });
+		// } else {
+		// 	this.onSelect(obj);
+		// }
+		this.selectedInternalValue = obj;
+		this.mapInternalValueToDisplayValue();
 	}
 
 	registerOnChange(fn: any): void {
 		this.selectValue.subscribe(selectedValue => {
-			fn(selectedValue[this.valueKey]);
+			fn(this.selectedInternalValue);
 		});
 	}
 

@@ -35,8 +35,6 @@ export class PlaylistActionComponent implements ControlValueAccessor, OnInit {
 	// Emit action object whenever the inputs change
 	@Output() actionChange = new EventEmitter<Action>();
 
-	thenPlaylist: SpotifyApi.PlaylistObjectSimplified = null;
-
 	constructor(private cdr: ChangeDetectorRef, private spotifyService: SpotifyService) {
 		this.attachChangeProxy();
 	}
@@ -48,7 +46,6 @@ export class PlaylistActionComponent implements ControlValueAccessor, OnInit {
 	onThenPlaylistSelected(playlist: SpotifyApi.PlaylistObjectSimplified) {
 		console.log('playlist selected then', playlist);
 		if (playlist && this.action.thenType === ActionThenType.ADD_TO_PLAYLIST) {
-			this.thenPlaylist = playlist;
 			this.action.thenId = playlist.id;
 		}
 	}

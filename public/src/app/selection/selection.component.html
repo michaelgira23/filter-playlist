@@ -1,6 +1,6 @@
 <div class="selection-input list-item" (click)="showModal()">
-	<h2 [class.placeholder]="!selectedValue">
-		{{selectedValue ? selectedValue : (create ? 'select or create ' : 'select ') + selectionLabel.toLowerCase()}}
+	<h2 [class.placeholder]="!selectedDisplayValue">
+		{{selectedDisplayValue ? selectedDisplayValue : (create ? 'select or create ' : 'select ') + selectionLabel.toLowerCase()}}
 	</h2>
 	<fa-icon [icon]="faSortDown" class="placeholder"></fa-icon>
 </div>
@@ -11,7 +11,7 @@
 			<fa-icon [icon]="faTimes" class="close-modal" (click)="hideModal()"></fa-icon>
 			{{ create ? 'Create or Select' : 'Select' }} a {{selectionLabel}}
 		</h1>
-		<input class="header-input search-input" placeholder="search your playlists" [(ngModel)]="value"
+		<input class="header-input search-input" placeholder="search your playlists" [(ngModel)]="searchValue"
 			(input)="onSearch($event.target.value)">
 		<button *ngIf="create" type="button" class="button" (click)="onCreateButton()">Create</button>
 		<ng-container *ngIf="searchResults.length > 0; else empty">

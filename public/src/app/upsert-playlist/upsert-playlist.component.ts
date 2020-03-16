@@ -2,8 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormArray, Validators, FormGroup, ValidationErrors } from '@angular/forms';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
-import { Observable } from 'rxjs';
-import { switchMap, map } from 'rxjs/operators';
+import { Observable, combineLatest, Subscription } from 'rxjs';
+import { switchMap, map, filter, tap } from 'rxjs/operators';
 import { faBars, faTrashAlt } from '@fortawesome/pro-light-svg-icons';
 import Fuse from 'fuse.js';
 import 'spotify-api';
@@ -27,7 +27,7 @@ export class UpsertPlaylistComponent implements OnInit {
 	faBars = faBars;
 	faTrashAlt = faTrashAlt;
 
-	filteredPlaylist$: Observable<any>;
+	subscriptions: Subscription[] = [];
 
 	playlists: SpotifyApi.PlaylistObjectSimplified[] = null;
 	searchPlaylistOptions: Fuse.FuseOptions<SpotifyApi.PlaylistObjectSimplified> = {
@@ -36,6 +36,9 @@ export class UpsertPlaylistComponent implements OnInit {
 	searchPlaylists: Fuse<SpotifyApi.PlaylistObjectSimplified, any>;
 
 	form = this.fb.group({
+		// Hidden value to determine whether creating a new form or editing an existing one
+		id: [null],
+
 		originId: [null, Validators.required],
 		criteria: this.fb.array([], ValidateCriteria),
 		actions: this.fb.array([], ValidateActions)
@@ -61,27 +64,43 @@ export class UpsertPlaylistComponent implements OnInit {
 		this.addCriteria();
 		this.addDefaultAction();
 
-		this.filteredPlaylist$ = this.route.paramMap.pipe(
-			map(params => params.get('id')),
-			// switchMap()
+		this.subscriptions.push(
+			this.route.paramMap.pipe(
+				map(params => params.get('id')),
+				// Set id whether or not it's null
+				tap(id => { this.form.controls.id.setValue(id); }),
+				filter(id => !!id),
+				switchMap(playlistId => {
+					console.log('playlist id', playlistId);
+					return combineLatest(
+						this.filteredPlaylists.getPlaylist(playlistId).snapshotChanges(),
+						this.filteredPlaylists.getActions(playlistId).snapshotChanges(),
+						this.filteredPlaylists.getCriteria(playlistId).snapshotChanges()
+					);
+				})
+			).subscribe(([playlistSnapshot, actionsSnapshot, criteriaSnapshot]) => {
+				// Rehydrate form with existing data
+				this.form.controls.originId.setValue(playlistSnapshot.payload.data().originId);
+
+				(this.form.controls.criteria as FormArray).clear();
+				for (const criteriaChangeAction of criteriaSnapshot) {
+					this.addCriteria(criteriaChangeAction.payload.doc.data());
+				}
+				this.onCriteriaChange();
+
+				(this.form.controls.actions as FormArray).clear();
+				for (const actionChangeAction of actionsSnapshot) {
+					this.addAction(actionChangeAction.payload.doc.data());
+				}
+			})
 		);
 
 		this.spotify.getPlaylists().subscribe(
 			playlists => {
-				console.log('playlists', playlists);
 				this.playlists = playlists.playlists;
 				this.searchPlaylists = new Fuse(this.playlists, this.searchPlaylistOptions);
 			}
 		);
-	}
-
-	/**
-	 * When source playlist is created
-	 * @param source Spotify object of the playlist selected
-	 */
-	onSelectSource(source: SpotifyApi.PlaylistObjectSimplified) {
-		console.log('select playlist', source);
-		this.form.setValue({ originId: source.id });
 	}
 
 	/**
@@ -176,7 +195,7 @@ export class UpsertPlaylistComponent implements OnInit {
 			}
 		});
 
-		console.log('Save playlist!', this.form.valid, this.form.value, this.form.errors);
+		console.log('Submitted form', this.form.valid, this.form.value, this.form.errors);
 
 		if (this.form.valid) {
 			this.filteredPlaylists.upsert(this.form.value).subscribe(result => {
