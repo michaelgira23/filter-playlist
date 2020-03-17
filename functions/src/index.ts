@@ -75,6 +75,7 @@ const OAUTH_SCOPES = [
 	'user-read-email',
 	// Play music
 	'streaming',
+	'user-modify-playback-state',
 	// Read/write to user's playlists
 	'playlist-read-collaborative',
 	'playlist-modify-public',

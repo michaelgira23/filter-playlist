@@ -1,6 +1,12 @@
 import { Injectable } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/auth';
-import { AngularFirestore, AngularFirestoreCollection, DocumentChangeAction, DocumentReference, DocumentSnapshot } from '@angular/fire/firestore';
+import {
+	AngularFirestore,
+	AngularFirestoreCollection,
+	DocumentChangeAction,
+	DocumentReference,
+	DocumentSnapshot
+} from '@angular/fire/firestore';
 import { combineLatest, from, of } from 'rxjs';
 import { switchMap, map, first } from 'rxjs/operators';
 
@@ -45,6 +51,10 @@ export class FilteredPlaylistsService {
 		);
 	}
 
+	/**
+	 * Insert or update a playlist
+	 * @param playlist Playlist to create (without id parameter) to update (with id parameter)
+	 */
 	upsert(playlist: UpsertFilteredPlaylist) {
 
 		const firebasePlaylist: FirebaseFilteredPlaylist = {

@@ -7,7 +7,7 @@
 		<div class="song">
 			<img *ngIf="songImageUrl" [src]="songImageUrl" />
 			<h2>{{songTitle}}</h2>
-			<p>{{songArtist}}</p>
+			<p *ngIf="songArtists">{{songArtists.join(', ')}}</p>
 			<p>{{songAlbum}}</p>
 		</div>
 	</div>

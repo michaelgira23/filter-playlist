@@ -4,7 +4,7 @@ service cloud.firestore {
 
 		match /spotifyCredentials/{uid} {
 			// Can only access your own credentials
-			allow read, write: if request.auth.uid == uid;
+			allow read: if request.auth.uid == uid;
 		}
 
 		match /filteredPlaylists/{playlistId} {
