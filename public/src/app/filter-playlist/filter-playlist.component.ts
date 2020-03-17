@@ -2,7 +2,15 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription, combineLatest } from 'rxjs';
 import { map, switchMap, first } from 'rxjs/operators';
-import { faChevronLeft } from '@fortawesome/pro-light-svg-icons';
+import {
+	faChevronLeft,
+	faHistory,
+	faPauseCircle,
+	faPlayCircle,
+	faRandom,
+	faStepBackward,
+	faStepForward
+} from '@fortawesome/pro-light-svg-icons';
 import SpotifyWebApi from 'spotify-web-api-node';
 
 import { FilteredPlaylistsService } from '../filtered-playlists.service';
@@ -18,6 +26,12 @@ import { SpotifyService } from '../spotify.service';
 export class FilterPlaylistComponent implements OnInit, OnDestroy {
 
 	faChevronLeft = faChevronLeft;
+	// faHistory = faHistory;
+	faPauseCircle = faPauseCircle;
+	faPlayCircle = faPlayCircle;
+	// faRandom = faRandom;
+	faStepBackward = faStepBackward;
+	faStepForward = faStepForward;
 
 	subscriptions: Subscription[] = [];
 	updateProgressInterval: NodeJS.Timer;

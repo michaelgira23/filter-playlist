@@ -42,6 +42,7 @@
 	.playback-position,
 	.playback-duration {
 		position: absolute;
+		top: 0;
 		display: inline-block;
 		color: $light-gray;
 	}
@@ -59,6 +60,8 @@
 		position: relative;
 		display: flex;
 		align-items: center;
+
+		margin-bottom: 1.75rem;
 
 		.progress-full,
 		.progress-empty {
@@ -84,6 +87,33 @@
 
 			background-color: $white;
 			border-radius: 1rem;
+		}
+	}
+
+	.playback-actions {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+
+		.pause-play,
+		.previous-track,
+		.next-track {
+			transition: opacity, transform 100ms cubic-bezier(0, 0, 0.2, 1);
+			opacity: 0.75;
+
+			&:hover {
+				transform: scale(1.08);
+				opacity: 1;
+			}
+		}
+
+		.pause-play {
+			font-size: 3rem;
+		}
+
+		.previous-track,
+		.next-track {
+			font-size: 1.5rem;
 		}
 	}
 }

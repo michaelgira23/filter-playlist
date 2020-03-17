@@ -19,7 +19,11 @@
 			<div class="progress-knob" [style.left]="songProgress * 100 + '%'"></div>
 		</div>
 		<span class="playback-duration">{{this.songDuration | date:'m:ss'}}</span>
-		<div class="playback-actions"></div>
+		<div class="playback-actions">
+			<fa-icon [icon]="faStepBackward" class="previous-track"></fa-icon>
+			<fa-icon [icon]="isPaused ? faPlayCircle : faPauseCircle" class="pause-play"></fa-icon>
+			<fa-icon [icon]="faStepForward" class="next-track"></fa-icon>
+		</div>
 	</div>
 	<div *ngFor="let criterion of criteria" class="list-item">
 		<h2>{{criterion.purpose}}</h2>
