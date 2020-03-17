@@ -1,3 +1,5 @@
+@import '../../styles/constants';
+
 .criteria-description {
 	margin-bottom: 0.75rem;
 }
@@ -28,6 +30,42 @@
 
 		.song-album {
 			opacity: 0.5;
+		}
+	}
+}
+
+.playback {
+	margin-bottom: 5rem;
+
+	.progress {
+		position: relative;
+		display: flex;
+		align-items: center;
+
+		.progress-full,
+		.progress-empty {
+			position: absolute;
+			height: 3px;
+			border-radius: 1rem;
+		}
+
+		.progress-full {
+			background-color: $green;
+		}
+
+		.progress-empty {
+			width: 100%;
+			background-color: $slightly-light-dark-gray;
+		}
+
+		.progress-knob {
+			width: 0.5rem;
+			height: 0.5rem;
+			position: absolute;
+			z-index: 1;
+
+			background-color: $white;
+			border-radius: 1rem;
 		}
 	}
 }

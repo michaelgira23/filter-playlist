@@ -3,15 +3,25 @@
 		<fa-icon [icon]="faChevronLeft" class="back-nav" routerLink="/select"></fa-icon>
 		Filter Songs
 	</h1>
-	<div class="playback">
-		<div class="song">
-			<img *ngIf="songImageUrl" class="song-image" [src]="songImageUrl" />
-			<div class="song-info">
-				<h2 class="song-title">{{songTitle}}</h2>
-				<p *ngIf="songArtists" class="song-artists">{{songArtists.join(', ')}}</p>
-				<p class="song-album">{{songAlbum}}</p>
-			</div>
+	<div class="song">
+		<img *ngIf="songImageUrl" class="song-image" [src]="songImageUrl" />
+		<div class="song-info">
+			<h2 class="song-title">{{songTitle}}</h2>
+			<p *ngIf="songArtists" class="song-artists">{{songArtists.join(', ')}}</p>
+			<p class="song-album">{{songAlbum}}</p>
 		</div>
+	</div>
+	<div class="playback">
+		<div>
+			<div>{{this.songCurrentPosition | date:'m:ss'}}</div>
+			<div class="progress">
+				<div class="progress-empty"></div>
+				<div class="progress-full" [style.width]="songProgress * 100 + '%'"></div>
+				<div class="progress-knob" [style.left]="songProgress * 100 + '%'"></div>
+			</div>
+			<div>{{this.songDuration | date:'m:ss'}}</div>
+		</div>
+		<div class="playback-actions"></div>
 	</div>
 	<div *ngFor="let criterion of criteria" class="list-item">
 		<h2>{{criterion.purpose}}</h2>

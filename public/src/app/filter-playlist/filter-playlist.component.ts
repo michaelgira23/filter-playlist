@@ -20,6 +20,7 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 	faChevronLeft = faChevronLeft;
 
 	subscriptions: Subscription[] = [];
+	updateProgressInterval: NodeJS.Timer;
 	playlist: FirebaseFilteredPlaylist = null;
 	criteria: Criteria[] = [];
 
@@ -30,6 +31,15 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 	songArtists: string[] = null;
 	songAlbum: string = null;
 	songImageUrl: string = null;
+
+	isPaused = true;
+	playedSince: number = null;
+	songInitialPosition: number = null;
+	songCurrentPosition: number = null;
+	songDuration: number = null;
+	get songProgress() {
+		return this.songCurrentPosition / this.songDuration;
+	}
 
 	constructor(
 		private route: ActivatedRoute,
@@ -93,6 +103,10 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 			})
 		);
 
+		this.updateProgressInterval = setInterval(() => {
+			this.updatePlaybackProgress();
+		}, 100);
+
 	}
 
 	ngOnDestroy() {
@@ -100,6 +114,9 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 			if (subscription) {
 				subscription.unsubscribe();
 			}
+		}
+		if (this.updateProgressInterval) {
+			clearInterval(this.updateProgressInterval);
 		}
 	}
 
@@ -109,6 +126,7 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 
 	onSpotifyPlayerStateChanged(state: Spotify.PlaybackState) {
 		console.log('state', state);
+
 		this.songTitle = state.track_window.current_track.name;
 		this.songArtists = [];
 		for (const artist of state.track_window.current_track.artists) {
@@ -116,6 +134,16 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 		}
 		this.songAlbum = state.track_window.current_track.album.name;
 		this.songImageUrl = state.track_window.current_track.album.images[0].url;
+
+		this.isPaused = state.paused;
+		if (state.paused) {
+			this.playedSince = null;
+		} else {
+			this.playedSince = Date.now();
+		}
+		this.songInitialPosition = state.position;
+		this.songCurrentPosition = state.position;
+		this.songDuration = state.duration;
 	}
 
 	async onSpotifyReady(instance: Spotify.WebPlaybackInstance) {
@@ -129,6 +157,12 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 
 	onSpotifyNotReady(instance: Spotify.WebPlaybackInstance) {
 		console.log('not ready', instance);
+	}
+
+	updatePlaybackProgress() {
+		if (!this.isPaused && this.playedSince) {
+			this.songCurrentPosition = (Date.now() - this.playedSince) + this.songInitialPosition;
+		}
 	}
 
 }
