@@ -24,6 +24,11 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 
 	spotifyPlayer: Spotify.SpotifyPlayer;
 
+	songTitle: string = null;
+	songArtist: string = null;
+	songAlbum: string = null;
+	songImageUrl: string = null;
+
 	constructor(private route: ActivatedRoute, private router: Router, private filteredPlaylists: FilteredPlaylistsService) { }
 
 	ngOnInit() {
@@ -63,14 +68,14 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 			getOAuthToken: cb => cb(environment.spotifyAccessToken)
 		});
 
-		this.spotifyPlayer.addListener('initialization_error', this.onSpotifyError);
-		this.spotifyPlayer.addListener('authentication_error', this.onSpotifyError);
-		this.spotifyPlayer.addListener('account_error', this.onSpotifyError);
-		this.spotifyPlayer.addListener('playback_error', this.onSpotifyError);
+		this.spotifyPlayer.addListener('initialization_error', this.onSpotifyError.bind(this));
+		this.spotifyPlayer.addListener('authentication_error', this.onSpotifyError.bind(this));
+		this.spotifyPlayer.addListener('account_error', this.onSpotifyError.bind(this));
+		this.spotifyPlayer.addListener('playback_error', this.onSpotifyError.bind(this));
 
-		this.spotifyPlayer.addListener('player_state_changed', this.onSpotifyPlayerStateChanged);
-		this.spotifyPlayer.addListener('ready', this.onSpotifyReady);
-		this.spotifyPlayer.addListener('not_ready', this.onSpotifyNotReady);
+		this.spotifyPlayer.addListener('player_state_changed', this.onSpotifyPlayerStateChanged.bind(this));
+		this.spotifyPlayer.addListener('ready', this.onSpotifyReady.bind(this));
+		this.spotifyPlayer.addListener('not_ready', this.onSpotifyNotReady.bind(this));
 
 		this.spotifyPlayer.connect();
 	}
@@ -89,6 +94,10 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 
 	onSpotifyPlayerStateChanged(state: Spotify.PlaybackState) {
 		console.log('state', state);
+		this.songTitle = state.track_window.current_track.name;
+		this.songArtist = state.track_window.current_track.artists[0].name;
+		this.songAlbum = state.track_window.current_track.album.name;
+		this.songImageUrl = state.track_window.current_track.album.images[2].url;
 	}
 
 	onSpotifyReady(instance: Spotify.WebPlaybackInstance) {

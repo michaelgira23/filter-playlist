@@ -3,6 +3,14 @@
 		<fa-icon [icon]="faChevronLeft" class="back-nav" routerLink="/select"></fa-icon>
 		Filter Songs
 	</h1>
+	<div class="playback">
+		<div class="song">
+			<img *ngIf="songImageUrl" [src]="songImageUrl" />
+			<h2>{{songTitle}}</h2>
+			<p>{{songArtist}}</p>
+			<p>{{songAlbum}}</p>
+		</div>
+	</div>
 	<div *ngFor="let criterion of criteria" class="list-item">
 		<h2>{{criterion.purpose}}</h2>
 		<p class="criteria-description">{{criterion.description}}</p>
