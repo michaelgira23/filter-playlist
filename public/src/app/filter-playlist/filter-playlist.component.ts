@@ -1,16 +1,8 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription, combineLatest } from 'rxjs';
-import { map, switchMap, first } from 'rxjs/operators';
-import {
-	faChevronLeft,
-	faHistory,
-	faPauseCircle,
-	faPlayCircle,
-	faRandom,
-	faStepBackward,
-	faStepForward
-} from '@fortawesome/pro-light-svg-icons';
+import { map, switchMap } from 'rxjs/operators';
+import { faChevronLeft, faPauseCircle, faPlayCircle, faStepBackward, faStepForward } from '@fortawesome/pro-light-svg-icons';
 import SpotifyWebApi from 'spotify-web-api-node';
 
 import { FilteredPlaylistsService } from '../filtered-playlists.service';
@@ -26,12 +18,12 @@ import { SpotifyService } from '../spotify.service';
 export class FilterPlaylistComponent implements OnInit, OnDestroy {
 
 	faChevronLeft = faChevronLeft;
-	// faHistory = faHistory;
 	faPauseCircle = faPauseCircle;
 	faPlayCircle = faPlayCircle;
-	// faRandom = faRandom;
 	faStepBackward = faStepBackward;
 	faStepForward = faStepForward;
+
+	@ViewChild('progress', { static: false }) progress: ElementRef;
 
 	subscriptions: Subscription[] = [];
 	updateProgressInterval: NodeJS.Timer;
@@ -176,6 +168,28 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 		if (!this.isPaused) {
 			this.songCurrentPosition = (Date.now() - this.playedSince) + this.songInitialPosition;
 		}
+	}
+
+	async togglePlayResume() {
+		if (this.isPaused) {
+			await this.spotifyApi.play();
+		} else {
+			await this.spotifyApi.pause();
+		}
+	}
+
+	async previousTrack() {
+		await this.spotifyApi.skipToPrevious();
+	}
+
+	async nextTrack() {
+		await this.spotifyApi.skipToNext();
+	}
+
+	async skipTo(event: MouseEvent) {
+		const bound = this.progress.nativeElement.getBoundingClientRect();
+		const percentage = (event.clientX - bound.left) / bound.width;
+		await this.spotifyApi.seek(Math.floor(percentage * this.songDuration));
 	}
 
 }

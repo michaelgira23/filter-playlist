@@ -39,54 +39,62 @@
 	margin-top: 3.5rem;
 	margin-bottom: 5.6rem;
 
-	.playback-position,
-	.playback-duration {
-		position: absolute;
-		top: 0;
-		display: inline-block;
-		color: $light-gray;
-	}
-
-	.playback-position {
-		transform: translate(calc(-100% - 1rem), calc(-50% - 2px));
-	}
-
-	.playback-duration {
-		right: 0;
-		transform: translate(calc(100% + 1rem), calc(-50% - 2px));
-	}
-
 	.progress {
-		position: relative;
+		height: 1rem;
 		display: flex;
 		align-items: center;
-
 		margin-bottom: 1.75rem;
+		cursor: pointer;
 
-		.progress-full,
-		.progress-empty {
-			position: absolute;
-			height: 3px;
-			border-radius: 1rem;
-		}
-
-		.progress-full {
-			background-color: $green;
-		}
-
-		.progress-empty {
+		.progress-bar {
 			width: 100%;
-			background-color: $slightly-light-dark-gray;
-		}
+			position: relative;
+			display: flex;
+			align-items: center;
 
-		.progress-knob {
-			width: 0.5rem;
-			height: 0.5rem;
-			position: absolute;
-			z-index: 1;
+			.progress-position,
+			.progress-duration {
+				position: absolute;
+				top: 0;
+				display: inline-block;
+				color: $light-gray;
+				cursor: default;
+			}
 
-			background-color: $white;
-			border-radius: 1rem;
+			.progress-position {
+				transform: translate(calc(-100% - 1rem), calc(-50% - 1.5px));
+			}
+
+			.progress-duration {
+				right: 0;
+				transform: translate(calc(100% + 1rem), calc(-50% - 1.5px));
+			}
+
+			.progress-full,
+			.progress-empty {
+				position: absolute;
+				height: 3px;
+				border-radius: 1rem;
+			}
+
+			.progress-full {
+				background-color: $green;
+			}
+
+			.progress-empty {
+				width: 100%;
+				background-color: $slightly-light-dark-gray;
+			}
+
+			.progress-knob {
+				width: 0.5rem;
+				height: 0.5rem;
+				position: absolute;
+				z-index: 1;
+
+				background-color: $white;
+				border-radius: 1rem;
+			}
 		}
 	}
 
@@ -100,6 +108,7 @@
 		.next-track {
 			transition: opacity, transform 100ms cubic-bezier(0, 0, 0.2, 1);
 			opacity: 0.75;
+			cursor: pointer;
 
 			&:hover {
 				transform: scale(1.08);
