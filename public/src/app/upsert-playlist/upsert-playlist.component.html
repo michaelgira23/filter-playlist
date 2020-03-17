@@ -1,5 +1,8 @@
 <div class="container">
-	<h1>Filter Playlist</h1>
+	<h1>
+		<fa-icon [icon]="faChevronLeft" class="back-nav" routerLink="/select"></fa-icon>
+		Filter Playlist
+	</h1>
 	<form [formGroup]="form" (ngSubmit)="save()">
 		<h2>Source Playlist</h2>
 		<app-selection class="section-container" selectionLabel="Playlist" [search]="searchPlaylists" displayKey="name"

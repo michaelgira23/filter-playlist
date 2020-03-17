@@ -4,7 +4,7 @@ import { FormBuilder, FormArray, Validators, FormGroup, ValidationErrors } from 
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Observable, combineLatest, Subscription } from 'rxjs';
 import { switchMap, map, filter, tap } from 'rxjs/operators';
-import { faBars, faTrashAlt } from '@fortawesome/pro-light-svg-icons';
+import { faBars, faChevronLeft, faTrashAlt } from '@fortawesome/pro-light-svg-icons';
 import Fuse from 'fuse.js';
 import 'spotify-api';
 
@@ -23,8 +23,8 @@ import { ValidateCriteria } from '../validators/criteria.validator';
 })
 export class UpsertPlaylistComponent implements OnInit {
 
-	console = console;
 	faBars = faBars;
+	faChevronLeft = faChevronLeft;
 	faTrashAlt = faTrashAlt;
 
 	subscriptions: Subscription[] = [];
@@ -209,6 +209,7 @@ export class UpsertPlaylistComponent implements OnInit {
 		if (this.form.valid) {
 			this.filteredPlaylists.upsert(this.form.value).subscribe(result => {
 				console.log('Form upsert result', result);
+				this.router.navigate(['/select']);
 			});
 		} else {
 			console.log('Form invalid!');

@@ -139,3 +139,9 @@ button {
 	display: block;
 	margin-bottom: 6rem;
 }
+
+.back-nav {
+	position: absolute;
+	transform: translateX(calc(-100% - 6.25rem));
+	cursor: pointer;
+}
