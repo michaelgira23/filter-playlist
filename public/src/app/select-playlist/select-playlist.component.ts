@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { faEdit } from '@fortawesome/pro-light-svg-icons';
 
 import { FilteredPlaylist } from '../../model/filtered-playlist';
 import { FilteredPlaylistsService } from '../filtered-playlists.service';
@@ -13,6 +13,8 @@ import { SpotifyService } from '../spotify.service';
 	styleUrls: ['./select-playlist.component.scss']
 })
 export class SelectPlaylistComponent implements OnInit {
+
+	faEdit = faEdit;
 
 	filteredPlaylists$: Observable<any[]>;
 	spotifyPlaylists: { [id: string]: SpotifyApi.PlaylistObjectSimplified } = {};

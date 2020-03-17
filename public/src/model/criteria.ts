@@ -1,5 +1,5 @@
 export interface Criteria {
-	id?: string;
+	id: string;
 	purpose: string;
 	description: string;
 }

@@ -1,9 +1,14 @@
 <div class="container">
-	<h1>Filter Playlist</h1>
+	<h1>Select Filtered Playlist</h1>
 	<div *ngFor="let playlist of filteredPlaylists$ | async" class="list-item playlist"
-		[routerLink]="['/playlists', playlist.id, 'edit']">
-		<h2>{{getPlaylistName(playlist.data.originId)}}</h2>
-		{{playlist | json}}
+		[routerLink]="['/playlists', playlist.id, 'filter']">
+		<div>
+			<h2>{{getPlaylistName(playlist.data.originId)}}</h2>
+			{{playlist | json}}
+		</div>
+		<div class="playlist-actions">
+			<fa-icon [icon]="faEdit" class="playlist-edit" [routerLink]="['/playlists', playlist.id, 'edit']"></fa-icon>
+		</div>
 	</div>
 	<button class="button" routerLink="/create">New Filtered Playlist</button>
 </div>

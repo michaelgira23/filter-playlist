@@ -1,1 +1,11 @@
-<p>filter-playlist works!</p>
+<div class="container">
+	<h1>
+		<fa-icon [icon]="faChevronLeft" class="back-nav" routerLink="/select"></fa-icon>
+		Filter Songs
+	</h1>
+	<div *ngFor="let criterion of criteria" class="list-item">
+		<h2>{{criterion.purpose}}</h2>
+		<p class="criteria-description">{{criterion.description}}</p>
+	</div>
+	<button class="button">Filter Song</button>
+</div>

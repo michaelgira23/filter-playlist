@@ -1,8 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormArray, Validators, FormGroup, ValidationErrors } from '@angular/forms';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
-import { Observable, combineLatest, Subscription } from 'rxjs';
+import { combineLatest, Subscription } from 'rxjs';
 import { switchMap, map, filter, tap } from 'rxjs/operators';
 import { faBars, faChevronLeft, faTrashAlt } from '@fortawesome/pro-light-svg-icons';
 import Fuse from 'fuse.js';
@@ -21,7 +21,7 @@ import { ValidateCriteria } from '../validators/criteria.validator';
 	templateUrl: './upsert-playlist.component.html',
 	styleUrls: ['./upsert-playlist.component.scss']
 })
-export class UpsertPlaylistComponent implements OnInit {
+export class UpsertPlaylistComponent implements OnInit, OnDestroy {
 
 	faBars = faBars;
 	faChevronLeft = faChevronLeft;
@@ -106,6 +106,14 @@ export class UpsertPlaylistComponent implements OnInit {
 				this.searchPlaylists = new Fuse(this.playlists, this.searchPlaylistOptions);
 			}
 		);
+	}
+
+	ngOnDestroy() {
+		for (const subscription of this.subscriptions) {
+			if (subscription) {
+				subscription.unsubscribe();
+			}
+		}
 	}
 
 	/**
