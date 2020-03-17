@@ -35,7 +35,25 @@
 }
 
 .playback {
-	margin-bottom: 5rem;
+	position: relative;
+	margin-top: 3.5rem;
+	margin-bottom: 5.6rem;
+
+	.playback-position,
+	.playback-duration {
+		position: absolute;
+		display: inline-block;
+		color: $light-gray;
+	}
+
+	.playback-position {
+		transform: translate(calc(-100% - 1rem), calc(-50% - 2px));
+	}
+
+	.playback-duration {
+		right: 0;
+		transform: translate(calc(100% + 1rem), calc(-50% - 2px));
+	}
 
 	.progress {
 		position: relative;

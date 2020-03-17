@@ -12,15 +12,13 @@
 		</div>
 	</div>
 	<div class="playback">
-		<div>
-			<div>{{this.songCurrentPosition | date:'m:ss'}}</div>
-			<div class="progress">
-				<div class="progress-empty"></div>
-				<div class="progress-full" [style.width]="songProgress * 100 + '%'"></div>
-				<div class="progress-knob" [style.left]="songProgress * 100 + '%'"></div>
-			</div>
-			<div>{{this.songDuration | date:'m:ss'}}</div>
+		<span class="playback-position">{{this.songCurrentPosition | date:'m:ss'}}</span>
+		<div class="progress">
+			<div class="progress-empty"></div>
+			<div class="progress-full" [style.width]="songProgress * 100 + '%'"></div>
+			<div class="progress-knob" [style.left]="songProgress * 100 + '%'"></div>
 		</div>
+		<span class="playback-duration">{{this.songDuration | date:'m:ss'}}</span>
 		<div class="playback-actions"></div>
 	</div>
 	<div *ngFor="let criterion of criteria" class="list-item">

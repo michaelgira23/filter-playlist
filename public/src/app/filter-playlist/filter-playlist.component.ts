@@ -126,6 +126,9 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 
 	onSpotifyPlayerStateChanged(state: Spotify.PlaybackState) {
 		console.log('state', state);
+		if (state === null) {
+			return;
+		}
 
 		this.songTitle = state.track_window.current_track.name;
 		this.songArtists = [];
@@ -136,11 +139,7 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 		this.songImageUrl = state.track_window.current_track.album.images[0].url;
 
 		this.isPaused = state.paused;
-		if (state.paused) {
-			this.playedSince = null;
-		} else {
-			this.playedSince = Date.now();
-		}
+		this.playedSince = (state as any).timestamp;
 		this.songInitialPosition = state.position;
 		this.songCurrentPosition = state.position;
 		this.songDuration = state.duration;
@@ -160,7 +159,7 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 	}
 
 	updatePlaybackProgress() {
-		if (!this.isPaused && this.playedSince) {
+		if (!this.isPaused) {
 			this.songCurrentPosition = (Date.now() - this.playedSince) + this.songInitialPosition;
 		}
 	}
