@@ -71,7 +71,6 @@ export class UpsertPlaylistComponent implements OnInit {
 				tap(id => { this.form.controls.id.setValue(id); }),
 				filter(id => !!id),
 				switchMap(playlistId => {
-					console.log('playlist id', playlistId);
 					return combineLatest(
 						this.filteredPlaylists.getPlaylist(playlistId).snapshotChanges(),
 						this.filteredPlaylists.getActions(playlistId).snapshotChanges(),
@@ -178,7 +177,6 @@ export class UpsertPlaylistComponent implements OnInit {
 	 * @param action Action object with proper values
 	 */
 	addAction(action: Action) {
-		console.log('add acti', action);
 		this.formActions.push(
 			this.fb.group(action)
 		);
@@ -210,7 +208,7 @@ export class UpsertPlaylistComponent implements OnInit {
 
 		if (this.form.valid) {
 			this.filteredPlaylists.upsert(this.form.value).subscribe(result => {
-				console.log('form upsert result', result);
+				console.log('Form upsert result', result);
 			});
 		} else {
 			console.log('Form invalid!');

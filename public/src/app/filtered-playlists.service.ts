@@ -66,7 +66,6 @@ export class FilteredPlaylistsService {
 			first(),
 			// Determine whether playlist exists
 			map((playlistRef: DocumentChangeAction<FirebaseFilteredPlaylist> | DocumentSnapshot<FirebaseFilteredPlaylist>) => {
-				console.log('get filtered p', playlistRef);
 				if (playlistRef === null) {
 					return false;
 				} else if (typeof (playlistRef as DocumentSnapshot<FirebaseFilteredPlaylist>).exists === 'boolean') {
@@ -107,15 +106,12 @@ export class FilteredPlaylistsService {
 
 				const batch = this.afs.firestore.batch();
 
-				console.log('existing crit ids', existingCriteriaIds);
-
 				/**
 				 * Insert criteria into the database
 				 */
 
 				let orderCriteriaAt = 0;
 				for (const formCriterion of playlist.criteria) {
-					console.log('id exists?', formCriterion.id);
 					// Get existing document reference or create a new one
 					let exists: boolean;
 					let criteriaId: string;
@@ -127,7 +123,6 @@ export class FilteredPlaylistsService {
 						exists = false;
 						criteriaId = this.afs.createId();
 					}
-					console.log('exists?', exists, 'id', criteriaId);
 					const docRef = criteriaCollection.doc(criteriaId).ref;
 
 					// Check if form criteria is invalid
@@ -198,9 +193,7 @@ export class FilteredPlaylistsService {
 
 				// Delete actions that aren't in form
 				for (const actionId of existingActionIds) {
-					console.log('delete action id?', actionId);
 					if (!keepActions[actionId]) {
-						console.log('YESSS!!!!');
 						const docRef = actionsCollection.doc(actionId).ref;
 						batch.delete(docRef);
 					}

@@ -44,7 +44,6 @@ export class PlaylistActionComponent implements ControlValueAccessor, OnInit {
 	}
 
 	onThenPlaylistSelected(playlist: SpotifyApi.PlaylistObjectSimplified) {
-		console.log('playlist selected then', playlist);
 		if (playlist && this.action.thenType === ActionThenType.ADD_TO_PLAYLIST) {
 			this.action.thenId = playlist.id;
 		}
@@ -59,7 +58,6 @@ export class PlaylistActionComponent implements ControlValueAccessor, OnInit {
 			// Add new playlist to the list of existing onces for search
 			tap(playlist => {
 				(this.searchPlaylists as any).list.push(playlist);
-				console.log('playlist', playlist);
 			})
 		);
 	}
@@ -87,7 +85,6 @@ export class PlaylistActionComponent implements ControlValueAccessor, OnInit {
 	}
 	registerOnChange(fn: any): void {
 		this.actionChange.subscribe(changedAction => {
-			console.log('register change', changedAction);
 			fn(changedAction);
 		});
 	}
