@@ -4,6 +4,7 @@ import { Subscription, combineLatest } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { faChevronLeft } from '@fortawesome/pro-light-svg-icons';
 
+import { environment } from '../../environments/environment';
 import { FilteredPlaylistsService } from '../filtered-playlists.service';
 import { Criteria } from '../../model/criteria';
 import { FirebaseFilteredPlaylist } from '../../model/filtered-playlist';
@@ -20,6 +21,8 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 	subscriptions: Subscription[] = [];
 	playlist: FirebaseFilteredPlaylist = null;
 	criteria: Criteria[] = [];
+
+	spotifyPlayer: Spotify.SpotifyPlayer;
 
 	constructor(private route: ActivatedRoute, private router: Router, private filteredPlaylists: FilteredPlaylistsService) { }
 
@@ -53,6 +56,23 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 				}
 			)
 		);
+
+		// Initialize Spotify web player (for playing music in the browser)
+		this.spotifyPlayer = new Spotify.Player({
+			name: 'Filter Playlist App',
+			getOAuthToken: cb => cb(environment.spotifyAccessToken)
+		});
+
+		this.spotifyPlayer.addListener('initialization_error', this.onSpotifyError);
+		this.spotifyPlayer.addListener('authentication_error', this.onSpotifyError);
+		this.spotifyPlayer.addListener('account_error', this.onSpotifyError);
+		this.spotifyPlayer.addListener('playback_error', this.onSpotifyError);
+
+		this.spotifyPlayer.addListener('player_state_changed', this.onSpotifyPlayerStateChanged);
+		this.spotifyPlayer.addListener('ready', this.onSpotifyReady);
+		this.spotifyPlayer.addListener('not_ready', this.onSpotifyNotReady);
+
+		this.spotifyPlayer.connect();
 	}
 
 	ngOnDestroy() {
@@ -61,6 +81,22 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 				subscription.unsubscribe();
 			}
 		}
+	}
+
+	onSpotifyError(error: Error) {
+		console.log('error', error.message);
+	}
+
+	onSpotifyPlayerStateChanged(state: Spotify.PlaybackState) {
+		console.log('state', state);
+	}
+
+	onSpotifyReady(instance: Spotify.WebPlaybackInstance) {
+		console.log('ready', instance);
+	}
+
+	onSpotifyNotReady(instance: Spotify.WebPlaybackInstance) {
+		console.log('not ready', instance);
 	}
 
 }
