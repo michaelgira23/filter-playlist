@@ -1,3 +1,33 @@
 .criteria-description {
 	margin-bottom: 0.75rem;
 }
+
+.song {
+	display: flex;
+
+	.song-image {
+		width: calc(100% / 3);
+	}
+
+	.song-info {
+		margin-left: 2rem;
+
+		> * {
+			margin-top: 0;
+			margin-bottom: 0;
+		}
+
+		.song-artists,
+		.song-album {
+			font-size: 1.5rem;
+		}
+
+		.song-title {
+			margin-bottom: 1rem;
+		}
+
+		.song-album {
+			opacity: 0.5;
+		}
+	}
+}

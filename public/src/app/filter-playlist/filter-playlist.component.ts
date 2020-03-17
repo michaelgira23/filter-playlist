@@ -115,7 +115,7 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 			this.songArtists.push(artist.name);
 		}
 		this.songAlbum = state.track_window.current_track.album.name;
-		this.songImageUrl = state.track_window.current_track.album.images[2].url;
+		this.songImageUrl = state.track_window.current_track.album.images[0].url;
 	}
 
 	async onSpotifyReady(instance: Spotify.WebPlaybackInstance) {

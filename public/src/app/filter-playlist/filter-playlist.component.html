@@ -5,10 +5,12 @@
 	</h1>
 	<div class="playback">
 		<div class="song">
-			<img *ngIf="songImageUrl" [src]="songImageUrl" />
-			<h2>{{songTitle}}</h2>
-			<p *ngIf="songArtists">{{songArtists.join(', ')}}</p>
-			<p>{{songAlbum}}</p>
+			<img *ngIf="songImageUrl" class="song-image" [src]="songImageUrl" />
+			<div class="song-info">
+				<h2 class="song-title">{{songTitle}}</h2>
+				<p *ngIf="songArtists" class="song-artists">{{songArtists.join(', ')}}</p>
+				<p class="song-album">{{songAlbum}}</p>
+			</div>
 		</div>
 	</div>
 	<div *ngFor="let criterion of criteria" class="list-item">
