@@ -25,7 +25,9 @@ label {
 	width: $width;
 	height: $height;
 	border-radius: $height;
+	cursor: pointer;
 
+	// Hide "Toggle" text but keep it for accessibility
 	text-indent: -9999px;
 
 	&::after {

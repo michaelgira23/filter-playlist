@@ -1,4 +1,4 @@
-<input type="checkbox" id="checky" class="checky" />
-<label for="checky">
+<input type="checkbox" [id]="label" class="checky" [(ngModel)]="value" (ngModelChange)="valueChange.emit($event)" />
+<label [for]="label">
 	Toggle
 </label>

@@ -1,3 +1,7 @@
 <div class="container">
-	<app-switch></app-switch>
+	<app-switch [(value)]="value1"></app-switch>
+	Value 1: {{value1 | json}}
+
+	<app-switch [(value)]="value2"></app-switch>
+	Value 2: {{value2 | json}}
 </div>

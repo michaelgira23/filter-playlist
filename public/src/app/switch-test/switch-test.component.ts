@@ -7,6 +7,9 @@ import { Component, OnInit } from '@angular/core';
 })
 export class SwitchTestComponent implements OnInit {
 
+	value1: boolean = null;
+	value2 = true;
+
 	constructor() { }
 
 	ngOnInit() {
