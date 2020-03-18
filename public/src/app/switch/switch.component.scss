@@ -1,0 +1,44 @@
+@import '../../styles/constants';
+
+$width: 3.125rem;
+$height: $width / 2;
+
+.checky {
+	display: none;
+
+	& + label {
+		background-color: $light-gray;
+	}
+
+	&:checked + label {
+		background-color: $green;
+
+		&::after {
+			transform: translateX(100%);
+		}
+	}
+}
+
+label {
+	position: relative;
+	display: block;
+	width: $width;
+	height: $height;
+	border-radius: $height;
+
+	text-indent: -9999px;
+
+	&::after {
+		content: '';
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		width: $height;
+
+		background-color: $white;
+		border-radius: $height;
+		box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.1);
+		transition: transform 100ms cubic-bezier(0, 0, 0.2, 1);
+	}
+}

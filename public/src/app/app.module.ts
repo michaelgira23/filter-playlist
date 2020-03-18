@@ -23,6 +23,8 @@ import { UpsertPlaylistComponent } from './upsert-playlist/upsert-playlist.compo
 import { PlaylistActionComponent } from './upsert-playlist/playlist-action/playlist-action.component';
 import { SelectionComponent } from './selection/selection.component';
 import { ListItemComponent } from './list-item/list-item.component';
+import { SwitchComponent } from './switch/switch.component';
+import { SwitchTestComponent } from './switch-test/switch-test.component';
 
 import { FilteredPlaylistsService } from './filtered-playlists.service';
 import { SpotifyService } from './spotify.service';
@@ -37,7 +39,9 @@ import { SpotifyService } from './spotify.service';
 		UpsertPlaylistComponent,
 		PlaylistActionComponent,
 		SelectionComponent,
-		ListItemComponent
+		ListItemComponent,
+		SwitchComponent,
+		SwitchTestComponent
 	],
 	imports: [
 		BrowserModule,
