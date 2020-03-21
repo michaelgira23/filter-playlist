@@ -57,7 +57,7 @@ export class FilteredPlaylistsService {
 	 */
 	upsert(playlist: UpsertFilteredPlaylist) {
 
-		const firebasePlaylist: FirebaseFilteredPlaylist = {
+		const firebasePlaylist: Omit<FirebaseFilteredPlaylist, 'createdAt'> = {
 			createdBy: this.afAuth.auth.currentUser.uid,
 			originId: playlist.originId
 		};
@@ -94,7 +94,7 @@ export class FilteredPlaylistsService {
 						map(() => this.filteredPlaylistsCollection.doc<FirebaseFilteredPlaylist>(playlist.id).ref)
 					);
 				} else {
-					return this.filteredPlaylistsCollection.add(firebasePlaylist);
+					return this.filteredPlaylistsCollection.add(firebasePlaylist as FirebaseFilteredPlaylist);
 				}
 			}),
 			// Get existing critieria to see which to delete

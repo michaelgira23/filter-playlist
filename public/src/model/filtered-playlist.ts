@@ -12,6 +12,7 @@ export interface UpsertFilteredPlaylist extends FirebaseFilteredPlaylist {
 }
 
 export interface FirebaseFilteredPlaylist {
+	createdAt: number;
 	createdBy: string;
 	originId: string;
 }

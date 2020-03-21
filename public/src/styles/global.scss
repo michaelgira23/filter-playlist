@@ -107,6 +107,7 @@ button {
 	@extend .inset;
 
 	position: relative;
+	display: block;
 	margin-bottom: 1.5rem;
 	padding: 2.25rem 5.5rem;
 	text-align: left;

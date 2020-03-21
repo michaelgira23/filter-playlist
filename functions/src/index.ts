@@ -16,7 +16,37 @@ const host = debug ? 'http://localhost:4200' : 'https://filter-playlist.web.app'
 admin.initializeApp({
 	credential: admin.credential.cert(serviceAccount as any),
 	databaseURL: `https://${process.env.GCLOUD_PROJECT}.firebaseio.com`
-})
+});
+
+/**
+ * Add `createdAt` property on all documents
+ */
+exports.documentCreatedDate = functions.firestore
+	.document('{collectionId}/{documentId}')
+	.onCreate((snap, context) => {
+		return snap.ref.set(
+			{ createdAt: snap.createTime },
+			{ merge: true }
+		).catch(error => {
+			console.error(error);
+			return false;
+		});
+	});
+
+/**
+ * Add `updatedAt` property for filtered songs
+ */
+exports.documentUpdatedDate = functions.firestore
+	.document('filteredSongs/{documentId}')
+	.onWrite((snap, context) => {
+		return snap.after.ref.set(
+			{ updatedAt: snap.after.updateTime },
+			{ merge: true }
+		).catch(error => {
+			console.error(error);
+			return false;
+		});
+	});
 
 /**
  * Initialize Spotify API. Don't use same instance so that access tokens are not mixed up on alternate requests.

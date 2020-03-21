@@ -28,9 +28,10 @@
 			<fa-icon [icon]="faStepForward" class="next-track" (click)="nextTrack()"></fa-icon>
 		</div>
 	</div>
-	<div *ngFor="let criterion of criteria" class="list-item">
+	<label *ngFor="let criterion of criteria" class="list-item criteria" [for]="criterion.id">
+		<app-switch class="criteria-switch" [label]="criterion.id"></app-switch>
 		<h2>{{criterion.purpose}}</h2>
 		<p class="criteria-description">{{criterion.description}}</p>
-	</div>
+	</label>
 	<button class="button">Filter Song</button>
 </div>

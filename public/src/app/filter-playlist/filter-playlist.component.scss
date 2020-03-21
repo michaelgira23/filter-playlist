@@ -1,9 +1,5 @@
 @import '../../styles/constants';
 
-.criteria-description {
-	margin-bottom: 0.75rem;
-}
-
 .song {
 	display: flex;
 
@@ -124,5 +120,19 @@
 		.next-track {
 			font-size: 1.5rem;
 		}
+	}
+}
+
+.criteria {
+	user-select: none;
+
+	.criteria-switch {
+		position: absolute;
+		transform: translate(calc(-100% - 0.75rem), 1rem);
+	}
+
+	.criteria-description {
+		margin-top: 0;
+		margin-bottom: 0.75rem;
 	}
 }

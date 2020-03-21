@@ -7,6 +7,7 @@ export interface Action {
 }
 
 export interface FirebaseAction {
+	createdAt: number;
 	playlistId: string;
 	order: number;
 	ifType: ActionIfType;
