@@ -13,6 +13,7 @@ import { switchMap, map, first } from 'rxjs/operators';
 import { FirebaseAction } from '../model/actions';
 import { FirebaseCriteria } from '../model/criteria';
 import { FilteredPlaylist, UpsertFilteredPlaylist, FirebaseFilteredPlaylist } from '../model/filtered-playlist';
+import { FirebaseFilteredSong } from '../model/filtered-song';
 import { ensureActionParameters } from './validators/actions.validator';
 
 @Injectable({
@@ -49,6 +50,10 @@ export class FilteredPlaylistsService {
 			'filterCriteria',
 			ref => ref.where('playlistId', '==', playlistId).orderBy('order')
 		);
+	}
+
+	getFilteredSong(playlistId: string, songId: string) {
+		return this.getPlaylist(playlistId).collection('filteredSongs').doc<FirebaseFilteredSong>(songId);
 	}
 
 	/**
@@ -213,4 +218,13 @@ export class FilteredPlaylistsService {
 			})
 		);
 	}
+
+	filterSong(playlistId: string, songId: string, criteriaPass: string[], criteriaFail: string[]) {
+		return this.getFilteredSong(playlistId, songId).set({
+			updatedBy: this.afAuth.auth.currentUser.uid,
+			criteriaPass,
+			criteriaFail
+		} as FirebaseFilteredSong);
+	}
+
 }

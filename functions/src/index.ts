@@ -6,6 +6,7 @@ import express from 'express';
 import admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
 import SpotifyWebApi from 'spotify-web-api-node';
+import _ from 'lodash';
 
 import serviceAccount from '../service-account.json';
 
@@ -25,7 +26,7 @@ exports.documentCreatedDate = functions.firestore
 	.document('{collectionId}/{documentId}')
 	.onCreate((snap, context) => {
 		return snap.ref.set(
-			{ createdAt: snap.createTime },
+			{ createdAt: snap.createTime?.toMillis() },
 			{ merge: true }
 		).catch(error => {
 			console.error(error);
@@ -37,15 +38,26 @@ exports.documentCreatedDate = functions.firestore
  * Add `updatedAt` property for filtered songs
  */
 exports.documentUpdatedDate = functions.firestore
-	.document('filteredSongs/{documentId}')
+	.document('filteredPlaylists/{playlistId}/filteredSongs/{documentId}')
 	.onWrite((snap, context) => {
-		return snap.after.ref.set(
-			{ updatedAt: snap.after.updateTime },
-			{ merge: true }
-		).catch(error => {
-			console.error(error);
+
+		// Compare before and after snapshots to avoid infinite loop of updates
+		const hasChanged = !snap.before.exists || !_.isEqual(
+			_.omit(snap.before.data(), 'updatedAt'),
+			_.omit(snap.after.data(), 'updatedAt')
+		);
+
+		if (hasChanged) {
+			return snap.after.ref.set(
+				{ updatedAt: snap.after.updateTime?.toMillis() },
+				{ merge: true }
+			).catch(error => {
+				console.error(error);
+				return false;
+			});
+		} else {
 			return false;
-		});
+		}
 	});
 
 /**

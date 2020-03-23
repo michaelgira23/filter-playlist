@@ -25,16 +25,14 @@ service cloud.firestore {
 			allow update: if request.resource.data.keys().hasOnly(['createdBy', 'originId'])
 				&& isOgUser();
 			allow read, delete: if isOgUser();
-		}
 
-		match /filteredSongs/{songId} {
+			match /filteredSongs/{songId} {
 
-			allow create: if request.resource.data.keys().hasOnly(['updatedBy', 'playlistId', 'criteriaPass', 'criteriaFail'])
-				&& request.auth.uid == request.resource.data.updatedBy
-				&& authorizedPlaylist(request.resource.data.playlistId);
-			allow update: if request.resource.data.keys().hasOnly(['updatedBy', 'playlistId', 'criteriaPass', 'criteriaFail'])
-				&& authorizedPlaylist(resource.data.playlistId);
-			allow read, delete: if authorizedPlaylist(resource.data.playlistId);
+				allow create, update: if request.resource.data.keys().hasOnly(['updatedBy', 'criteriaPass', 'criteriaFail'])
+					&& request.auth.uid == request.resource.data.updatedBy
+					&& authorizedPlaylist(playlistId);
+				allow read, delete: if authorizedPlaylist(playlistId);
+			}
 		}
 
 		match /filterCriteria/{criteriaId} {

@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subscription, combineLatest } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { Subscription, combineLatest, of, BehaviorSubject } from 'rxjs';
+import { map, switchMap, first, filter, distinctUntilChanged } from 'rxjs/operators';
 import { faChevronLeft, faPauseCircle, faPlayCircle, faStepBackward, faStepForward } from '@fortawesome/pro-light-svg-icons';
 import SpotifyWebApi from 'spotify-web-api-node';
 
@@ -27,12 +27,15 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 
 	subscriptions: Subscription[] = [];
 	updateProgressInterval: NodeJS.Timer;
+	playlistId: string = null;
 	playlist: FirebaseFilteredPlaylist = null;
 	criteria: Criteria[] = [];
+	criteriaForm: { [criteriaId: string]: boolean } = {};
 
 	spotifyApi: SpotifyWebApi;
 	spotifyPlayer: Spotify.SpotifyPlayer;
 
+	song$ = new BehaviorSubject<string>(null);
 	songTitle: string = null;
 	songArtists: string[] = null;
 	songAlbum: string = null;
@@ -60,15 +63,18 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 				map(params => params.get('id')),
 				switchMap(playlistId => {
 					return combineLatest(
+						of(playlistId),
 						this.filteredPlaylists.getPlaylist(playlistId).snapshotChanges(),
 						this.filteredPlaylists.getCriteria(playlistId).snapshotChanges()
 					);
 				})
 			).subscribe(
-				([playlistSnapshot, criteriaSnapshot]) => {
+				([playlistId, playlistSnapshot, criteriaSnapshot]) => {
 					console.log('playlist', playlistSnapshot, criteriaSnapshot);
+					this.playlistId = playlistSnapshot.payload.id;
 					this.playlist = playlistSnapshot.payload.data();
 
+					// Update criteria form
 					const newCriteria: Criteria[] = [];
 					for (const snapshot of criteriaSnapshot) {
 						newCriteria.push({
@@ -78,6 +84,35 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 						});
 					}
 					this.criteria = newCriteria;
+
+					// Listen to
+					this.subscriptions.push(
+						this.song$.pipe(
+							filter(uri => uri !== null),
+							distinctUntilChanged(),
+							switchMap(uri => this.filteredPlaylists.getFilteredSong(playlistId, uri).valueChanges())
+						).subscribe(filteredSong => {
+							console.log('filtered song', filteredSong);
+							const criteriaPassed = (filteredSong && typeof filteredSong.criteriaPass === 'object')
+								? filteredSong.criteriaPass : [];
+							const criteriaFailed = (filteredSong && typeof filteredSong.criteriaFail === 'object')
+								? filteredSong.criteriaFail : [];
+
+							this.criteriaForm = {};
+							// As backup: all new criteria defaults to false
+							for (const criterion of this.criteria) {
+								this.criteriaForm[criterion.id] = false;
+							}
+							// Set all criteria to false that have explicitly been marked false
+							for (const failId of criteriaFailed) {
+								this.criteriaForm[failId] = false;
+							}
+							// Set all criteria to true that have explicitly been marked true
+							for (const passedId of criteriaPassed) {
+								this.criteriaForm[passedId] = true;
+							}
+						})
+					);
 				},
 				err => {
 					this.router.navigate(['/select']);
@@ -127,7 +162,7 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 	}
 
 	onSpotifyError(error: Error) {
-		console.log('error', error.message);
+		console.log('Spotify Error', error.message);
 	}
 
 	onSpotifyPlayerStateChanged(state: Spotify.PlaybackState) {
@@ -149,6 +184,8 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 		this.songInitialPosition = state.position;
 		this.songCurrentPosition = state.position;
 		this.songDuration = state.duration;
+
+		this.song$.next(state.track_window.current_track.uri);
 	}
 
 	async onSpotifyReady(instance: Spotify.WebPlaybackInstance) {
@@ -190,6 +227,41 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 		const bound = this.progress.nativeElement.getBoundingClientRect();
 		const percentage = (event.clientX - bound.left) / bound.width;
 		await this.spotifyApi.seek(Math.floor(percentage * this.songDuration));
+	}
+
+	filterSong() {
+		console.log('submit form', this.criteriaForm);
+		this.song$.pipe(
+			first(),
+			map(uri => {
+				if (this.playlistId === null || uri === null) {
+					throw new Error('No song is currently playing!');
+				}
+				return uri;
+			}),
+			switchMap(uri => {
+				const criteriaPass = [];
+				const criteriaFail = [];
+
+				for (const criterionId of Object.keys(this.criteriaForm)) {
+					if (this.criteriaForm[criterionId]) {
+						criteriaPass.push(criterionId);
+					} else {
+						criteriaFail.push(criterionId);
+					}
+				}
+
+				console.log('filter song', criteriaPass, criteriaFail);
+				return this.filteredPlaylists.filterSong(this.playlistId, uri, criteriaPass, criteriaFail);
+			})
+		).subscribe(
+			res => {
+				console.log('Song successfully filtered!', res);
+			},
+			error => {
+				console.log('Error!!', error);
+			}
+		);
 	}
 
 }
