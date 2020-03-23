@@ -92,7 +92,7 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 							distinctUntilChanged(),
 							switchMap(uri => this.filteredPlaylists.getFilteredSong(playlistId, uri).valueChanges())
 						).subscribe(filteredSong => {
-							console.log('filtered song', filteredSong);
+
 							const criteriaPassed = (filteredSong && typeof filteredSong.criteriaPass === 'object')
 								? filteredSong.criteriaPass : [];
 							const criteriaFailed = (filteredSong && typeof filteredSong.criteriaFail === 'object')
@@ -251,12 +251,12 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 					}
 				}
 
-				console.log('filter song', criteriaPass, criteriaFail);
 				return this.filteredPlaylists.filterSong(this.playlistId, uri, criteriaPass, criteriaFail);
 			})
 		).subscribe(
-			res => {
-				console.log('Song successfully filtered!', res);
+			async () => {
+				console.log('Song successfully filtered!');
+				await this.nextTrack();
 			},
 			error => {
 				console.log('Error!!', error);
