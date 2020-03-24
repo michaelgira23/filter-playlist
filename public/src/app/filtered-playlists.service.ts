@@ -13,7 +13,7 @@ import { switchMap, map, first } from 'rxjs/operators';
 import { FirebaseAction } from '../model/actions';
 import { FirebaseCriteria } from '../model/criteria';
 import { FilteredPlaylist, UpsertFilteredPlaylist, FirebaseFilteredPlaylist } from '../model/filtered-playlist';
-import { FirebaseFilteredSong } from '../model/filtered-song';
+import { FirebaseFilteredSong, FirebaseMarkedCriteria } from '../model/filtered-song';
 import { ensureActionParameters } from './validators/actions.validator';
 
 @Injectable({
@@ -24,7 +24,7 @@ export class FilteredPlaylistsService {
 	private filteredPlaylistsCollection: AngularFirestoreCollection<FirebaseFilteredPlaylist>;
 
 	constructor(private afAuth: AngularFireAuth, private afs: AngularFirestore) {
-		this.filteredPlaylistsCollection = afs.collection<FilteredPlaylist>('filteredPlaylists');
+		this.filteredPlaylistsCollection = afs.collection<FirebaseFilteredPlaylist>('filteredPlaylists');
 	}
 
 	getMyPlaylists() {
@@ -52,8 +52,12 @@ export class FilteredPlaylistsService {
 		);
 	}
 
+	getFilteredSongs(playlistId: string) {
+		return this.getPlaylist(playlistId).collection('filteredSongs');
+	}
+
 	getFilteredSong(playlistId: string, songId: string) {
-		return this.getPlaylist(playlistId).collection('filteredSongs').doc<FirebaseFilteredSong>(songId);
+		return this.getFilteredSongs(playlistId).doc<FirebaseFilteredSong>(songId);
 	}
 
 	/**
@@ -219,11 +223,29 @@ export class FilteredPlaylistsService {
 		);
 	}
 
-	filterSong(playlistId: string, songId: string, criteriaPass: string[], criteriaFail: string[]) {
+	/**
+	 * Find a list of a songs that have not yet been filtered for all of the criteria
+	 *
+	 * @param playlistId Filtered playlist id
+	 * @param criteriaIds Criteria ids that should all be filled out
+	 */
+	findUnfilteredSongs(playlistId: string, criteriaIds: string[]) {
+		// return this.getFilteredSongs(playlistId).snapshotChanges().pipe(
+		// 	map()
+		// );
+	}
+
+	/**
+	 * Mark a song in a filtered playlist that passes or fails certain criteria
+	 *
+	 * @param playlistId Filtered playlist id that the song belongs to
+	 * @param songId Spotify URI of the song
+	 * @param markedCriteria Criteria explicitly marked as pass or fail
+	 */
+	filterSong(playlistId: string, songId: string, markedCriteria: FirebaseMarkedCriteria) {
 		return this.getFilteredSong(playlistId, songId).set({
 			updatedBy: this.afAuth.auth.currentUser.uid,
-			criteriaPass,
-			criteriaFail
+			markedCriteria
 		} as FirebaseFilteredSong);
 	}
 

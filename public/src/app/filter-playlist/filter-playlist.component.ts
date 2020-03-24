@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subscription, combineLatest, of, BehaviorSubject } from 'rxjs';
+import { Subscription, combineLatest, of, BehaviorSubject, from } from 'rxjs';
 import { map, switchMap, first, filter, distinctUntilChanged } from 'rxjs/operators';
 import { faChevronLeft, faPauseCircle, faPlayCircle, faStepBackward, faStepForward } from '@fortawesome/pro-light-svg-icons';
 import SpotifyWebApi from 'spotify-web-api-node';
@@ -8,6 +8,7 @@ import SpotifyWebApi from 'spotify-web-api-node';
 import { FilteredPlaylistsService } from '../filtered-playlists.service';
 import { Criteria } from '../../model/criteria';
 import { FirebaseFilteredPlaylist } from '../../model/filtered-playlist';
+import { FirebaseMarkedCriteria } from '../../model/filtered-song';
 import { SpotifyService } from '../spotify.service';
 
 @Component({
@@ -26,26 +27,44 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 	@ViewChild('progress', { static: false }) progress: ElementRef;
 
 	subscriptions: Subscription[] = [];
+	// Interval for updating the playback progress bar
 	updateProgressInterval: NodeJS.Timer;
+	// ID of filtered playlist stored on our own database
 	playlistId: string = null;
+	// Filtered playlist object stored on our own database
 	playlist: FirebaseFilteredPlaylist = null;
+	// Playlist from Spotify
+	spotifyPlaylist: SpotifyApi.SinglePlaylistResponse;
+	// User-defined criteria to sort through the filtered playlist
 	criteria: Criteria[] = [];
-	criteriaForm: { [criteriaId: string]: boolean } = {};
+	// ID of all the criteria explicitly marked for the current song.
+	// May include criteria already deleted (but we should internally keep just in case)
+	criteriaForm: FirebaseMarkedCriteria = {};
 
-	spotifyApi: SpotifyWebApi;
-	spotifyPlayer: Spotify.SpotifyPlayer;
+	// Spotify API wrapper instance
+	spotifyApi: SpotifyWebApi = null;
+	// Spotify Player instance
+	spotifyPlayer: Spotify.SpotifyPlayer = null;
 
+	// RxJS subject whenever the Spotify playback changes songs
 	song$ = new BehaviorSubject<string>(null);
+	// Current song info
 	songTitle: string = null;
 	songArtists: string[] = null;
 	songAlbum: string = null;
 	songImageUrl: string = null;
 
+	// Spotify player properties
 	isPaused = true;
+	// Timestamp since last updated
 	playedSince: number = null;
+	// Song position when player state was last updated
 	songInitialPosition: number = null;
+	// Current song position when accounting for current timestamp
 	songCurrentPosition: number = null;
+	// Duration of current song playing
 	songDuration: number = null;
+	// Progress percentage (0-1) of song
 	get songProgress() {
 		return this.songCurrentPosition / this.songDuration;
 	}
@@ -58,23 +77,22 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 	) { }
 
 	ngOnInit() {
+		// Get database information on the filtered playlist and criteria
 		this.subscriptions.push(
 			this.route.paramMap.pipe(
 				map(params => params.get('id')),
 				switchMap(playlistId => {
 					return combineLatest(
-						of(playlistId),
+						this.spotify.getAccessToken(),
 						this.filteredPlaylists.getPlaylist(playlistId).snapshotChanges(),
 						this.filteredPlaylists.getCriteria(playlistId).snapshotChanges()
 					);
-				})
-			).subscribe(
-				([playlistId, playlistSnapshot, criteriaSnapshot]) => {
-					console.log('playlist', playlistSnapshot, criteriaSnapshot);
+				}),
+				switchMap(([{ accessToken }, playlistSnapshot, criteriaSnapshot]) => {
 					this.playlistId = playlistSnapshot.payload.id;
 					this.playlist = playlistSnapshot.payload.data();
 
-					// Update criteria form
+					// Update criteria form to display the switches
 					const newCriteria: Criteria[] = [];
 					for (const snapshot of criteriaSnapshot) {
 						newCriteria.push({
@@ -85,65 +103,41 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 					}
 					this.criteria = newCriteria;
 
-					// Listen to
-					this.subscriptions.push(
-						this.song$.pipe(
-							filter(uri => uri !== null),
-							distinctUntilChanged(),
-							switchMap(uri => this.filteredPlaylists.getFilteredSong(playlistId, uri).valueChanges())
-						).subscribe(filteredSong => {
-
-							const criteriaPassed = (filteredSong && typeof filteredSong.criteriaPass === 'object')
-								? filteredSong.criteriaPass : [];
-							const criteriaFailed = (filteredSong && typeof filteredSong.criteriaFail === 'object')
-								? filteredSong.criteriaFail : [];
-
-							this.criteriaForm = {};
-							// As backup: all new criteria defaults to false
-							for (const criterion of this.criteria) {
-								this.criteriaForm[criterion.id] = false;
-							}
-							// Set all criteria to false that have explicitly been marked false
-							for (const failId of criteriaFailed) {
-								this.criteriaForm[failId] = false;
-							}
-							// Set all criteria to true that have explicitly been marked true
-							for (const passedId of criteriaPassed) {
-								this.criteriaForm[passedId] = true;
-							}
-						})
-					);
+					// Setup Spotify playback + API
+					return this.setupSpotify(accessToken, this.playlist.originId);
+				}),
+			).subscribe(
+				result => {
+					console.log('bepsi', result);
 				},
-				err => {
+				error => {
+					console.log('Param id error', error);
 					this.router.navigate(['/select']);
 				}
 			)
 		);
 
+		// Get the existing passed/failed criteria (i.e. the values to put in the form)
 		this.subscriptions.push(
-			this.spotify.getAccessToken().pipe().subscribe(({ accessToken }) => {
-				// Connect to Spotify API (in addition to web player) so that we can actually control play/pause, etc.
-				this.spotifyApi = new SpotifyWebApi({ accessToken });
+			this.song$.pipe(
+				filter(uri => uri !== null),
+				distinctUntilChanged(),
+				switchMap(uri => this.filteredPlaylists.getFilteredSong(this.playlistId, uri).valueChanges())
+			).subscribe(filteredSong => {
+				// As backup: all new criteria defaults to false
+				this.criteriaForm = {};
+				for (const criterion of this.criteria) {
+					this.criteriaForm[criterion.id] = false;
+				}
 
-				// Initialize Spotify web player (for playing music in the browser)
-				this.spotifyPlayer = new Spotify.Player({
-					name: 'Filter Playlist App',
-					getOAuthToken: cb => cb(accessToken)
-				});
-
-				this.spotifyPlayer.addListener('initialization_error', this.onSpotifyError.bind(this));
-				this.spotifyPlayer.addListener('authentication_error', this.onSpotifyError.bind(this));
-				this.spotifyPlayer.addListener('account_error', this.onSpotifyError.bind(this));
-				this.spotifyPlayer.addListener('playback_error', this.onSpotifyError.bind(this));
-
-				this.spotifyPlayer.addListener('player_state_changed', this.onSpotifyPlayerStateChanged.bind(this));
-				this.spotifyPlayer.addListener('ready', this.onSpotifyReady.bind(this));
-				this.spotifyPlayer.addListener('not_ready', this.onSpotifyNotReady.bind(this));
-
-				this.spotifyPlayer.connect();
+				// Merge previous marked criteria, if it exists
+				if (filteredSong && typeof filteredSong.markedCriteria === 'object') {
+					Object.assign(this.criteriaForm, filteredSong.markedCriteria);
+				}
 			})
 		);
 
+		// Update the playback progress bar
 		this.updateProgressInterval = setInterval(() => {
 			this.updatePlaybackProgress();
 		}, 100);
@@ -159,6 +153,43 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 		if (this.updateProgressInterval) {
 			clearInterval(this.updateProgressInterval);
 		}
+	}
+
+	private setupSpotify(accessToken: string, originId: string) {
+		console.log('set up spotify');
+
+		// Connect to Spotify API (in addition to web player) so that we can actually control play/pause, etc.
+		if (!this.spotifyApi) {
+			this.spotifyApi = new SpotifyWebApi({ accessToken });
+		}
+
+		// Get playlist info + tracks from Spotify
+		return from(this.spotifyApi.getPlaylist(originId)).pipe(
+			// return of('asjdfklsad').pipe(
+			map(result => {
+				this.spotifyPlaylist = result.body;
+				console.log('initialize spotify player', result.body);
+
+				// Initialize Spotify web player (for playing music in the browser)
+				if (!this.spotifyPlayer) {
+					this.spotifyPlayer = new Spotify.Player({
+						name: 'Filter Playlist App',
+						getOAuthToken: cb => cb(accessToken)
+					});
+				}
+
+				this.spotifyPlayer.addListener('initialization_error', this.onSpotifyError.bind(this));
+				this.spotifyPlayer.addListener('authentication_error', this.onSpotifyError.bind(this));
+				this.spotifyPlayer.addListener('account_error', this.onSpotifyError.bind(this));
+				this.spotifyPlayer.addListener('playback_error', this.onSpotifyError.bind(this));
+
+				this.spotifyPlayer.addListener('player_state_changed', this.onSpotifyPlayerStateChanged.bind(this));
+				this.spotifyPlayer.addListener('ready', this.onSpotifyReady.bind(this));
+				this.spotifyPlayer.addListener('not_ready', this.onSpotifyNotReady.bind(this));
+
+				this.spotifyPlayer.connect();
+			})
+		);
 	}
 
 	onSpotifyError(error: Error) {
@@ -239,24 +270,13 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 				}
 				return uri;
 			}),
-			switchMap(uri => {
-				const criteriaPass = [];
-				const criteriaFail = [];
-
-				for (const criterionId of Object.keys(this.criteriaForm)) {
-					if (this.criteriaForm[criterionId]) {
-						criteriaPass.push(criterionId);
-					} else {
-						criteriaFail.push(criterionId);
-					}
-				}
-
-				return this.filteredPlaylists.filterSong(this.playlistId, uri, criteriaPass, criteriaFail);
-			})
+			// Save marked criteria in database
+			switchMap(uri => this.filteredPlaylists.filterSong(this.playlistId, uri, this.criteriaForm)),
+			// Skip to next track
+			switchMap(() => from(this.nextTrack())),
 		).subscribe(
-			async () => {
+			() => {
 				console.log('Song successfully filtered!');
-				await this.nextTrack();
 			},
 			error => {
 				console.log('Error!!', error);

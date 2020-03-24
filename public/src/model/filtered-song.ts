@@ -1,6 +1,9 @@
 export interface FirebaseFilteredSong {
 	updatedAt: number;
 	updatedBy: string;
-	criteriaPass: string[];
-	criteriaFail: string[];
+	markedCriteria: FirebaseMarkedCriteria;
+}
+
+export interface FirebaseMarkedCriteria {
+	[criteriaId: string]: boolean;
 }
