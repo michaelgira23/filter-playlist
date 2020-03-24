@@ -107,11 +107,11 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 					return this.setupSpotify(accessToken, this.playlist.originId);
 				}),
 			).subscribe(
-				result => {
-					console.log('bepsi', result);
+				() => {
+					console.log('Successfully set up filter playlist');
 				},
 				error => {
-					console.log('Param id error', error);
+					console.log('Error setting up song to filter', error);
 					this.router.navigate(['/select']);
 				}
 			)
@@ -156,7 +156,6 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 	}
 
 	private setupSpotify(accessToken: string, originId: string) {
-		console.log('set up spotify');
 
 		// Connect to Spotify API (in addition to web player) so that we can actually control play/pause, etc.
 		if (!this.spotifyApi) {
@@ -165,10 +164,8 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 
 		// Get playlist info + tracks from Spotify
 		return from(this.spotifyApi.getPlaylist(originId)).pipe(
-			// return of('asjdfklsad').pipe(
 			map(result => {
 				this.spotifyPlaylist = result.body;
-				console.log('initialize spotify player', result.body);
 
 				// Initialize Spotify web player (for playing music in the browser)
 				if (!this.spotifyPlayer) {
