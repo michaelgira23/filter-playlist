@@ -33,6 +33,8 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 	playlistId: string = null;
 	// Filtered playlist object stored on our own database
 	playlist: FirebaseFilteredPlaylist = null;
+	// Total tracks in the playlist
+	playlistSongs: SpotifyApi.PlaylistTrackObject[] = null;
 	// Playlist from Spotify
 	spotifyPlaylist: SpotifyApi.SinglePlaylistResponse;
 	// User-defined criteria to sort through the filtered playlist
@@ -45,6 +47,10 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 	spotifyApi: SpotifyWebApi = null;
 	// Spotify Player instance
 	spotifyPlayer: Spotify.SpotifyPlayer = null;
+	// List of unfiltered songs to queue
+	queueSongsOrdered: string[] = [];
+	// List of unfiltered songs to queue that are shuffled
+	queueSongsShuffled: string[] = [];
 
 	// RxJS subject whenever the Spotify playback changes songs
 	song$ = new BehaviorSubject<string>(null);
@@ -163,9 +169,18 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 		}
 
 		// Get playlist info + tracks from Spotify
-		return from(this.spotifyApi.getPlaylist(originId)).pipe(
-			map(result => {
-				this.spotifyPlaylist = result.body;
+		return from(this.spotify.getSongsFromPlaylist(this.spotifyApi, this.playlist.originId)).pipe(
+			switchMap(({ playlist, songs }) => {
+				this.spotifyPlaylist = playlist;
+				this.playlistSongs = songs;
+				return this.filteredPlaylists.getCompletelyFilteredSongs(this.playlistId, this.criteria.map(c => c.id));
+			}),
+			map(completelyFilteredSongs => {
+
+				console.log('playlist', this.spotifyPlaylist);
+				console.log('playlist songs', completelyFilteredSongs, this.playlistSongs);
+
+				/** @TODO Queue unfiltered songs */
 
 				// Initialize Spotify web player (for playing music in the browser)
 				if (!this.spotifyPlayer) {

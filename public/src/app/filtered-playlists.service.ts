@@ -53,7 +53,7 @@ export class FilteredPlaylistsService {
 	}
 
 	getFilteredSongs(playlistId: string) {
-		return this.getPlaylist(playlistId).collection('filteredSongs');
+		return this.getPlaylist(playlistId).collection<FirebaseFilteredSong>('filteredSongs');
 	}
 
 	getFilteredSong(playlistId: string, songId: string) {
@@ -224,15 +224,34 @@ export class FilteredPlaylistsService {
 	}
 
 	/**
-	 * Find a list of a songs that have not yet been filtered for all of the criteria
+	 * Find a list of a songs that have been filtered for all of the criteria
 	 *
 	 * @param playlistId Filtered playlist id
 	 * @param criteriaIds Criteria ids that should all be filled out
+	 * @returns An observable that returns an array of Spotify URIs
 	 */
-	findUnfilteredSongs(playlistId: string, criteriaIds: string[]) {
-		// return this.getFilteredSongs(playlistId).snapshotChanges().pipe(
-		// 	map()
-		// );
+	getCompletelyFilteredSongs(playlistId: string, criteriaIds: string[]) {
+		return this.getFilteredSongs(playlistId).snapshotChanges().pipe(
+			// Find only songs that have filtered all necessary criteria
+			map(actions => actions.filter(action => {
+				const markedCriteria = action.payload.doc.data().markedCriteria;
+
+				// Check if any criteria have not been marked yet
+				// (indicated by not having either true or false)
+				if (markedCriteria) {
+					for (const id of criteriaIds) {
+						if (typeof markedCriteria[id] !== 'boolean') {
+							return false;
+						}
+					}
+				}
+
+				// All required criteria are there. We do not care about it.
+				return true;
+			})),
+			// Return only ids (Spotify URIs)
+			map(actions => actions.map(action => action.payload.doc.id))
+		);
 	}
 
 	/**

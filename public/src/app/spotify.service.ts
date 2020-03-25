@@ -2,8 +2,9 @@ import { Injectable } from '@angular/core';
 import { HttpHeaders, HttpClient } from '@angular/common/http';
 import { AngularFireAuth } from '@angular/fire/auth';
 import { AngularFirestore } from '@angular/fire/firestore';
-import { from, of } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { from, of, empty } from 'rxjs';
+import { map, switchMap, expand, takeWhile, reduce } from 'rxjs/operators';
+import SpotifyWebApi from 'spotify-web-api-node';
 import 'spotify-api';
 
 import { environment } from '../environments/environment';
@@ -32,28 +33,36 @@ export class SpotifyService {
 		);
 	}
 
-	// /**
-	//  * Return a SpotifyWebApi instance that wraps around the Spotify web API
-	//  * @param accessToken Optionally provide access token to reduce number of database queries
-	//  */
-	// getSpotifyApi(accessToken?: string) {
-
-	// 	// Check if access token already provided
-	// 	let token$;
-	// 	if (accessToken) {
-	// 		token$ = of(accessToken);
-	// 	} else {
-	// 		token$ = this.getAccessToken().pipe(
-	// 			map(credentials => credentials.accessToken)
-	// 		);
-	// 	}
-
-	// 	return token$.pipe(
-	// 		map((token: string) => {
-	// 			const Spotify = new SpotifyWebApi({ accessToken: token });
-	// 		})
-	// 	);
-	// }
+	getSongsFromPlaylist(spotifyApi: SpotifyWebApi, playlistId: string) {
+		// Initially get entire playlist object as well
+		let playlistObject: SpotifyApi.SinglePlaylistResponse;
+		return from(spotifyApi.getPlaylist(playlistId)).pipe(
+			map(response => {
+				playlistObject = response.body;
+				return response.body.tracks;
+			}),
+			// Recursively add playlist track requests until we get all the playlist tracks
+			expand((response: SpotifyApi.PlaylistTrackResponse) => {
+				// Check if remaining playlists
+				const currentSongCount = response.offset + response.limit;
+				if (currentSongCount < response.total) {
+					return from(spotifyApi.getPlaylistTracks(playlistId, { offset: currentSongCount })).pipe(
+						map(trackResponse => trackResponse.body)
+					);
+				} else {
+					// End of playlist
+					return of(null);
+				}
+			}, 1000),
+			// Ensure we only take valid non-null values
+			takeWhile(value => value !== null),
+			map(trackResponse => trackResponse.items),
+			// After all playlist retrievals completed, combine them all back together
+			reduce((acc, value) => [...acc, ...value], []),
+			// Re-add the initial plyalist object
+			map((tracks: SpotifyApi.PlaylistTrackObject[]) => ({ playlist: playlistObject, songs: tracks }))
+		);
+	}
 
 	getAccessToken() {
 		return this.afs.collection('spotifyCredentials').doc<SpotifyCredentials>(this.afAuth.auth.currentUser.uid).valueChanges();
