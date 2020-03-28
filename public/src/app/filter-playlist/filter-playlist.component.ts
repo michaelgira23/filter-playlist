@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/co
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription, combineLatest, of, BehaviorSubject, from } from 'rxjs';
 import { map, switchMap, first, filter, distinctUntilChanged } from 'rxjs/operators';
+import * as _ from 'lodash';
 import { faChevronLeft, faPauseCircle, faPlayCircle, faStepBackward, faStepForward } from '@fortawesome/pro-light-svg-icons';
 import SpotifyWebApi from 'spotify-web-api-node';
 
@@ -151,6 +152,9 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 	}
 
 	ngOnDestroy() {
+		if (this.spotifyPlayer) {
+			this.spotifyPlayer.disconnect();
+		}
 		for (const subscription of this.subscriptions) {
 			if (subscription) {
 				subscription.unsubscribe();
@@ -180,7 +184,15 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 				console.log('playlist', this.spotifyPlaylist);
 				console.log('playlist songs', completelyFilteredSongs, this.playlistSongs);
 
-				/** @TODO Queue unfiltered songs */
+				// Determine what songs to play
+				this.queueSongsOrdered = this.playlistSongs
+					.map(song => song.track.uri)
+					.filter(uri => !completelyFilteredSongs.includes(uri));
+
+				this.queueSongsShuffled = _.shuffle(this.queueSongsOrdered);
+
+				console.log('queue ordered', this.queueSongsOrdered);
+				console.log('queue shuffled', this.queueSongsShuffled);
 
 				// Initialize Spotify web player (for playing music in the browser)
 				if (!this.spotifyPlayer) {
@@ -233,11 +245,31 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 
 	async onSpotifyReady(instance: Spotify.WebPlaybackInstance) {
 		console.log('ready', instance, [instance.device_id]);
+
+		// Start playback on web page
 		await this.spotifyApi.transferMyPlayback({
 			// Typings say `device_ids`, but actually `deviceIds`
 			deviceIds: [instance.device_id],
+			device_ids: [instance.device_id],
 			play: true
 		} as any);
+
+		// Queue up
+		setTimeout(async () => {
+			await this.playQueue();
+		}, 1000);
+	}
+
+	async playQueue(shuffled = false) {
+		let uris;
+		if (shuffled) {
+			uris = this.queueSongsShuffled;
+		} else {
+			uris = this.queueSongsOrdered;
+		}
+
+		console.log('play queue', uris);
+		await this.spotifyApi.play({ uris });
 	}
 
 	onSpotifyNotReady(instance: Spotify.WebPlaybackInstance) {
@@ -251,19 +283,15 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 	}
 
 	async togglePlayResume() {
-		if (this.isPaused) {
-			await this.spotifyApi.play();
-		} else {
-			await this.spotifyApi.pause();
-		}
+		await this.spotifyPlayer.togglePlay();
 	}
 
 	async previousTrack() {
-		await this.spotifyApi.skipToPrevious();
+		await this.spotifyPlayer.previousTrack();
 	}
 
 	async nextTrack() {
-		await this.spotifyApi.skipToNext();
+		await this.spotifyPlayer.nextTrack();
 	}
 
 	async skipTo(event: MouseEvent) {
@@ -274,9 +302,11 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 
 	filterSong() {
 		console.log('submit form', this.criteriaForm);
+		let currentUri: string;
 		this.song$.pipe(
 			first(),
 			map(uri => {
+				currentUri = uri;
 				if (this.playlistId === null || uri === null) {
 					throw new Error('No song is currently playing!');
 				}
@@ -289,6 +319,10 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 		).subscribe(
 			() => {
 				console.log('Song successfully filtered!');
+
+				// Remove song from queue
+				this.queueSongsOrdered = this.queueSongsOrdered.filter(uri => uri !== currentUri);
+				this.queueSongsShuffled = this.queueSongsShuffled.filter(uri => uri !== currentUri);
 			},
 			error => {
 				console.log('Error!!', error);
