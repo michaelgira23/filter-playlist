@@ -179,8 +179,9 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 				this.playlistSongs = songs;
 				return this.filteredPlaylists.getCompletelyFilteredSongs(this.playlistId, this.criteria.map(c => c.id));
 			}),
+			// Only get first snapshot, otherwise will reload every time we rate a song
+			first(),
 			map(completelyFilteredSongs => {
-
 				console.log('playlist', this.spotifyPlaylist);
 				console.log('playlist songs', completelyFilteredSongs, this.playlistSongs);
 
@@ -240,7 +241,9 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 		this.songCurrentPosition = state.position;
 		this.songDuration = state.duration;
 
-		this.song$.next(state.track_window.current_track.uri);
+		// Try to get `linked_from` field first, if it exists. This is the original URI in the playlist
+		// https://stackoverflow.com/a/31742096/4594858
+		this.song$.next((state.track_window.current_track as any).linked_from.uri || state.track_window.current_track.uri);
 	}
 
 	async onSpotifyReady(instance: Spotify.WebPlaybackInstance) {
