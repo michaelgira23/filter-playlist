@@ -5,125 +5,21 @@ import crypto from 'crypto';
 import express from 'express';
 import admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
-import SpotifyWebApi from 'spotify-web-api-node';
 import _ from 'lodash';
 
+import { OAUTH_SCOPES } from './config';
 import serviceAccount from '../service-account.json';
+import { spotifyFactory } from './spotify';
+import { currentTimestamp } from './utils';
 
-const debug = true;
-const host = debug ? 'http://localhost:4200' : 'https://filter-playlist.web.app';
+// Export functions
+export * from './functions/document-timestamp';
 
 // Firebase service account for querying database
 admin.initializeApp({
 	credential: admin.credential.cert(serviceAccount as any),
 	databaseURL: `https://${process.env.GCLOUD_PROJECT}.firebaseio.com`
 });
-
-/**
- * Add `createdAt` property on all documents
- */
-exports.documentCreatedDate = functions.firestore
-	.document('{collectionId}/{documentId}')
-	.onCreate((snap, context) => {
-		return snap.ref.set(
-			{ createdAt: snap.createTime?.toMillis() },
-			{ merge: true }
-		).catch(error => {
-			console.error(error);
-			return false;
-		});
-	});
-
-/**
- * Add `updatedAt` property for filtered songs
- */
-exports.documentUpdatedDate = functions.firestore
-	.document('filteredPlaylists/{playlistId}/filteredSongs/{documentId}')
-	.onWrite((snap, context) => {
-
-		// Compare before and after snapshots to avoid infinite loop of updates
-		const hasChanged = !snap.before.exists || !_.isEqual(
-			_.omit(snap.before.data(), 'updatedAt'),
-			_.omit(snap.after.data(), 'updatedAt')
-		);
-
-		if (hasChanged) {
-			return snap.after.ref.set(
-				{ updatedAt: snap.after.updateTime?.toMillis() },
-				{ merge: true }
-			).catch(error => {
-				console.error(error);
-				return false;
-			});
-		} else {
-			return false;
-		}
-	});
-
-/**
- * Initialize Spotify API. Don't use same instance so that access tokens are not mixed up on alternate requests.
- * @param uid Firebase user UID. If set, will authenticate the Spotify instance.
- */
-async function spotifyFactory(uid?: string) {
-	const Spotify = new SpotifyWebApi({
-		clientId: functions.config().spotify.client_id,
-		clientSecret: functions.config().spotify.client_secret,
-		redirectUri: `${host}/login`
-	});
-
-	if (uid) {
-		return await authenticateSpotify(Spotify, uid);
-	} else {
-		return Spotify;
-	}
-}
-
-/**
- * Authenticate the Spotify object by setting tokens and optionally refreshing any expired access token
- * @param Spotify Spotify instance
- * @param uid
- */
-async function authenticateSpotify(Spotify: SpotifyWebApi, uid: string) {
-	const credentialsDoc = admin.firestore().collection('spotifyCredentials').doc(uid);
-	const credentials = await (await credentialsDoc.get()).data();
-	if (!credentials) throw new Error('User\'s Spotify credentials not in database!');
-
-	Spotify.setRefreshToken(credentials.refreshToken);
-	Spotify.setAccessToken(credentials.accessToken);
-
-	// Refresh access token if it expired (or will expire in 30 seconds)
-	if (currentTimestamp() >= credentials.expiresAt - 30) {
-		const refreshResult = await Spotify.refreshAccessToken();
-		const accessToken = refreshResult.body['access_token'];
-		const expiresAt = currentTimestamp() + refreshResult.body['expires_in'];
-		Spotify.setAccessToken(accessToken);
-		await credentialsDoc.update({ accessToken, expiresAt });
-	}
-
-	return Spotify;
-}
-
-/**
- * Return current timestamp in seconds
- */
-function currentTimestamp() {
-	return Math.floor(Date.now() / 1000);
-}
-
-
-// Scopes to request.
-const OAUTH_SCOPES = [
-	// Read email address
-	'user-read-email',
-	// Play music
-	'streaming',
-	'user-modify-playback-state',
-	// Read/write to user's playlists
-	'playlist-read-collaborative',
-	'playlist-modify-public',
-	'playlist-read-private',
-	'playlist-modify-private'
-];
 
 const app = express();
 
