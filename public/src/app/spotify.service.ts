@@ -2,13 +2,12 @@ import { Injectable } from '@angular/core';
 import { HttpHeaders, HttpClient } from '@angular/common/http';
 import { AngularFireAuth } from '@angular/fire/auth';
 import { AngularFirestore } from '@angular/fire/firestore';
-import { from, of, empty, BehaviorSubject } from 'rxjs';
-import { map, switchMap, expand, takeWhile, reduce, tap, filter } from 'rxjs/operators';
+import { from, of, BehaviorSubject } from 'rxjs';
+import { map, switchMap, expand, takeWhile, reduce, tap, filter, first } from 'rxjs/operators';
 import SpotifyWebApi from 'spotify-web-api-node';
 import 'spotify-api';
 
 import { environment } from '../environments/environment';
-import { SpotifyCredentials } from '../model/spotify-credentials';
 
 @Injectable({
 	providedIn: 'root'
@@ -21,18 +20,14 @@ export class SpotifyService {
 
 	constructor(private afAuth: AngularFireAuth, private afs: AngularFirestore, private http: HttpClient) { }
 
-	// getPlaylists() {
-	// 	return this.generateOptions().pipe(
-	// 		switchMap(options =>
-	// 			this.http.get<GetPlaylistsResponse>(`${environment.firebaseFunctionsHost}/widgets/playlists`, options)
-	// 		),
-	// 		tap(b => console.log(b))
-	// 	);
-	// }
-
-	getPlaylists(spotifyApi: SpotifyWebApi) {
-		// Get first batch of playlists
-		return from(spotifyApi.getUserPlaylists()).pipe(
+	getPlaylists() {
+		let spotifyApi: SpotifyWebApi;
+		return this.getAuthenticatedSpotify().pipe(
+			// Get first batch of playlists
+			switchMap(newSpotifyApi => {
+				spotifyApi = newSpotifyApi;
+				return from(spotifyApi.getUserPlaylists());
+			}),
 			map(response => response.body),
 			// Recursively add playlist requests until we get all the playlists
 			expand((response: SpotifyApi.ListOfUsersPlaylistsResponse) => {
@@ -58,7 +53,7 @@ export class SpotifyService {
 	createPlaylist(name: string) {
 		return this.generateOptions().pipe(
 			switchMap(options =>
-				this.http.post<GetPlaylistsResponse>(`${environment.firebaseFunctionsHost}/widgets/playlists`, { name }, options)
+				this.http.post<GetPlaylistsResponse>(`${environment.firebaseFunctionsHost}/auth/playlists`, { name }, options)
 			)
 		);
 	}
@@ -94,60 +89,50 @@ export class SpotifyService {
 		);
 	}
 
+	/**
+	 * Return a SpotifyApi instance that will for-sure be authenticated
+	 */
 	getAuthenticatedSpotify() {
-		return this.getCredentials().pipe(
-			map(({ accessToken }) => new SpotifyWebApi({ accessToken }))
-		);
-	}
+		// How much before the token actually expires which should trigger refresh
+		const expireLeewayMs = 30 * 1000;
 
-	ensureAuthenticatedSpotify() {
 		return this.spotifyApi$.pipe(
+			first(),
 			switchMap(spotifyApi => {
-				// Check if SpotifyApi not set or is expired
 				if (spotifyApi === null) {
+					// SpotifyApi is not yet set
 					return this.createSpotifyApi();
-				} else if (this.spotifyApiExpiresAt && this.spotifyApiExpiresAt > Date.now() + 60) {
-					return null;
+				} else if (this.spotifyApiExpiresAt && this.spotifyApiExpiresAt > Date.now() + expireLeewayMs) {
+					// SpotifyApi is valid and not expiring soon
+					return this.spotifyApi$;
 				} else {
-					return of(spotifyApi);
+					// SpotifyApi is expiring soon
+					return this.createSpotifyApi();
 				}
 			})
 		);
 	}
 
+	/**
+	 * Retrieve Spotify credentials from the backend to save them in the frontend of refresh if they're expiring
+	 */
 	private createSpotifyApi() {
-		return this.getCredentials().pipe(
-			map(credentials => {
-				const newSpotifyApi = new SpotifyWebApi({
-					accessToken: credentials.accessToken,
-					refreshToken: credentials.refreshToken
-				});
-				this.spotifyApiExpiresAt = credentials.expiresAt * 1000;
-				this.spotifyApi$.next(newSpotifyApi);
+		return this.generateOptions().pipe(
+			switchMap(options =>
+				this.http.get<{ accessToken: string, expiresAt: number }>(`${environment.firebaseFunctionsHost}/auth/token`, options)
+			),
+			tap(b => console.log(b)),
+			switchMap(({ accessToken, expiresAt }) => {
+				this.spotifyApi$.next(new SpotifyWebApi({ accessToken }));
+				this.spotifyApiExpiresAt = expiresAt * 1000;
 				return this.spotifyApi$;
 			})
 		);
 	}
 
-	private refreshSpotifyApi() {
-
-		/** @TODO Ask backend to refresh Spotify tokens */
-		// // Refresh access token if it expired (or will expire in 30 seconds)
-		// if (currentTimestamp() >= credentials.expiresAt - 30) {
-		// 	const refreshResult = await Spotify.refreshAccessToken();
-		// 	const accessToken = refreshResult.body['access_token'];
-		// 	const expiresAt = currentTimestamp() + refreshResult.body['expires_in'];
-		// 	Spotify.setAccessToken(accessToken);
-		// 	await credentialsDoc.update({ accessToken, expiresAt });
-		// }
-
-		// return Spotify;
-	}
-
-	getCredentials() {
-		return this.afs.collection('spotifyCredentials').doc<SpotifyCredentials>(this.afAuth.auth.currentUser.uid).valueChanges();
-	}
-
+	/**
+	 * Generate HTTP header options for sending API requests to the Firebase functions backend
+	 */
 	private generateOptions() {
 		return from(this.afAuth.auth.currentUser.getIdToken()).pipe(
 			map(token => ({

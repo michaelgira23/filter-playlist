@@ -34,9 +34,7 @@ export class SelectPlaylistComponent implements OnInit, OnDestroy {
 
 		// Index Spotify playlists by their id
 		this.subscriptions.push(
-			this.spotifyService.getAuthenticatedSpotify().pipe(
-				switchMap(spotifyApi => this.spotifyService.getPlaylists(spotifyApi))
-			).subscribe(playlists => {
+			this.spotifyService.getPlaylists().subscribe(playlists => {
 				this.spotifyPlaylists = {};
 				for (const playlist of playlists) {
 					this.spotifyPlaylists[playlist.id] = playlist;

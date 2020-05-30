@@ -100,12 +100,11 @@ export class UpsertPlaylistComponent implements OnInit, OnDestroy {
 			})
 		);
 
-		this.spotify.getAuthenticatedSpotify().pipe(
-			switchMap(spotifyApi => this.spotify.getPlaylists(spotifyApi))
-		).subscribe(playlists => {
-			this.playlists = playlists;
-			this.searchPlaylists = new Fuse(this.playlists, this.searchPlaylistOptions);
-		}
+		this.subscriptions.push(
+			this.spotify.getPlaylists().subscribe(playlists => {
+				this.playlists = playlists;
+				this.searchPlaylists = new Fuse(this.playlists, this.searchPlaylistOptions);
+			})
 		);
 	}
 

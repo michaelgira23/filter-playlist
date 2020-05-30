@@ -19,7 +19,7 @@ export async function spotifyFactory(uid?: string) {
 	if (uid) {
 		return await authenticateSpotify(Spotify, uid);
 	} else {
-		return Spotify;
+		return { Spotify, expiresAt: null };
 	}
 }
 
@@ -37,13 +37,14 @@ async function authenticateSpotify(Spotify: SpotifyWebApi, uid: string) {
 	Spotify.setAccessToken(credentials.accessToken);
 
 	// Refresh access token if it expired (or will expire in 30 seconds)
-	if (currentTimestamp() >= credentials.expiresAt - 30) {
+	let expiresAt = credentials ? credentials.expiresAt : null;
+	if (currentTimestamp() >= credentials.expiresAt - 60) {
 		const refreshResult = await Spotify.refreshAccessToken();
 		const accessToken = refreshResult.body['access_token'];
-		const expiresAt = currentTimestamp() + refreshResult.body['expires_in'];
+		expiresAt = currentTimestamp() + refreshResult.body['expires_in'];
 		Spotify.setAccessToken(accessToken);
 		await credentialsDoc.update({ accessToken, expiresAt });
 	}
 
-	return Spotify;
+	return { Spotify, expiresAt };
 }

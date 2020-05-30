@@ -26,7 +26,7 @@ app.get('/login', async (req, res, next) => {
 		// State ensures the same browser is logging in and receiving the token
 		const state = req.cookies.state || crypto.randomBytes(20).toString('hex');
 		res.cookie('state', state.toString(), { maxAge: 3600000, secure: true, httpOnly: true });
-		const Spotify = await spotifyFactory();
+		const { Spotify } = await spotifyFactory();
 		const authorizeURL = Spotify.createAuthorizeURL(OAUTH_SCOPES, state.toString());
 		res.redirect(authorizeURL);
 	} catch (err) {
@@ -45,7 +45,7 @@ app.post('/token', async (req, res, next) => {
 		} else if (req.cookies.state !== req.body.state) {
 			throw new Error('Invalid state! Please try again.');
 		}
-		const Spotify = await spotifyFactory();
+		const { Spotify } = await spotifyFactory();
 		const authResult = await Spotify.authorizationCodeGrant(req.body.token);
 		Spotify.setAccessToken(authResult.body['access_token']);
 		const userResult = await Spotify.getMe();
@@ -72,35 +72,25 @@ app.post('/token', async (req, res, next) => {
 });
 
 /**
- * @TODO Refresh token
+ * Get Spotify access token for using API
  */
-app.get('/token/refresh', async (req, res, next) => {
+app.get('/token', async (req, res, next) => {
 	try {
-		if (!req.cookies.state) {
-			throw new Error('State cookie not set or expired. Maybe you took too long to authorize. Please try again.');
-		} else if (req.cookies.state !== req.body.state) {
-			throw new Error('Invalid state! Please try again.');
-		}
-		const Spotify = await spotifyFactory();
-		const authResult = await Spotify.authorizationCodeGrant(req.body.token);
-		Spotify.setAccessToken(authResult.body['access_token']);
-		const userResult = await Spotify.getMe();
+		// Get token from header
+		const token = req.get('Authorization')?.substring('Bearer '.length);
+		if (!token) throw new Error('No authorization token provided!');
 
-		let profilePic = null;
-		if (userResult.body['images'] && userResult.body['images'][0] && userResult.body['images'][0]['url']) {
-			profilePic = userResult.body['images'][0]['url'];
-		}
+		// Get Firebase token and Spotify username
+		const decodedToken = await admin.auth().verifyIdToken(token);
+		const uid = decodedToken.uid;
 
-		const firebaseToken = await createFirebaseAccount(
-			userResult.body['id'],
-			userResult.body['email'],
-			userResult.body['display_name'] as string,
-			profilePic,
-			authResult.body['refresh_token'],
-			authResult.body['access_token'],
-			currentTimestamp() + authResult.body['expires_in']
-		);
-		res.json({ token: firebaseToken });
+		// Get Spotify instance
+		const { Spotify, expiresAt } = await spotifyFactory(uid);
+
+		res.json({
+			accessToken: Spotify.getAccessToken(),
+			expiresAt
+		});
 	} catch (err) {
 		// Express cannot handle asynchronous promise rejections
 		next(err);
@@ -170,7 +160,7 @@ app.get('/playlists', async (req, res, next) => {
 		const uid = decodedToken.uid;
 
 		// Get Spotify playlists
-		const Spotify = await spotifyFactory(uid);
+		const { Spotify } = await spotifyFactory(uid);
 
 		// Max amount of playlists we can get per API call
 		const MAX_PLAYLIST_LIMIT = 50;
@@ -217,7 +207,7 @@ app.post('/playlists', async (req, res, next) => {
 		const username = uid.substring('spotify:'.length);
 
 		// Get Spotify playlists
-		const Spotify = await spotifyFactory(uid);
+		const { Spotify } = await spotifyFactory(uid);
 
 		// Make sure provided name in request
 		if (typeof req.body['name'] !== 'string') throw new Error('Please provide playlist name!');

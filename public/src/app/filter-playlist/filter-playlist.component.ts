@@ -266,6 +266,10 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 			uris = this.queueSongsOrdered;
 		}
 
+		// Limit amount of URIs to queue or else Spotify will return a 413 Request Entity Too Large
+		const maxUris = 100;
+		uris = uris.slice(0, maxUris);
+
 		console.log('play queue', uris);
 		await this.spotifyApi.play({ uris });
 	}

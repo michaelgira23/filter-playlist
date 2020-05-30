@@ -5,6 +5,7 @@ export const host = debug ? 'http://localhost:4200' : 'https://filter-playlist.w
 export const OAUTH_SCOPES = [
 	// Read email address
 	'user-read-email',
+	'user-read-private',
 	// Play music
 	'streaming',
 	'user-modify-playback-state',
