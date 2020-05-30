@@ -90,12 +90,13 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 				map(params => params.get('id')),
 				switchMap(playlistId => {
 					return combineLatest(
-						this.spotify.getAccessToken(),
+						this.spotify.getAuthenticatedSpotify(),
 						this.filteredPlaylists.getPlaylist(playlistId).snapshotChanges(),
 						this.filteredPlaylists.getCriteria(playlistId).snapshotChanges()
 					);
 				}),
-				switchMap(([{ accessToken }, playlistSnapshot, criteriaSnapshot]) => {
+				switchMap(([spotifyApi, playlistSnapshot, criteriaSnapshot]) => {
+					this.spotifyApi = spotifyApi;
 					this.playlistId = playlistSnapshot.payload.id;
 					this.playlist = playlistSnapshot.payload.data();
 
@@ -111,7 +112,7 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 					this.criteria = newCriteria;
 
 					// Setup Spotify playback + API
-					return this.setupSpotify(accessToken, this.playlist.originId);
+					return this.setupSpotify(this.playlist.originId);
 				}),
 			).subscribe(
 				() => {
@@ -165,13 +166,7 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 		}
 	}
 
-	private setupSpotify(accessToken: string, originId: string) {
-
-		// Connect to Spotify API (in addition to web player) so that we can actually control play/pause, etc.
-		if (!this.spotifyApi) {
-			this.spotifyApi = new SpotifyWebApi({ accessToken });
-		}
-
+	private setupSpotify(originId: string) {
 		// Get playlist info + tracks from Spotify
 		return from(this.spotify.getSongsFromPlaylist(this.spotifyApi, this.playlist.originId)).pipe(
 			switchMap(({ playlist, songs }) => {
@@ -199,7 +194,7 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 				if (!this.spotifyPlayer) {
 					this.spotifyPlayer = new Spotify.Player({
 						name: 'Filter Playlist App',
-						getOAuthToken: cb => cb(accessToken)
+						getOAuthToken: cb => cb(this.spotifyApi.getAccessToken())
 					});
 				}
 

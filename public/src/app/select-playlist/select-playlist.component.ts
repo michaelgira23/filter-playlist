@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Observable, Subscription } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 import { faEdit } from '@fortawesome/pro-light-svg-icons';
 
 import { FilteredPlaylist } from '../../model/filtered-playlist';
@@ -12,10 +12,11 @@ import { SpotifyService } from '../spotify.service';
 	templateUrl: './select-playlist.component.html',
 	styleUrls: ['./select-playlist.component.scss']
 })
-export class SelectPlaylistComponent implements OnInit {
+export class SelectPlaylistComponent implements OnInit, OnDestroy {
 
 	faEdit = faEdit;
 
+	subscriptions: Subscription[] = [];
 	filteredPlaylists$: Observable<any[]>;
 	spotifyPlaylists: { [id: string]: SpotifyApi.PlaylistObjectSimplified } = {};
 
@@ -32,12 +33,24 @@ export class SelectPlaylistComponent implements OnInit {
 		);
 
 		// Index Spotify playlists by their id
-		this.spotifyService.getPlaylists().subscribe(response => {
-			this.spotifyPlaylists = {};
-			for (const playlist of response.playlists) {
-				this.spotifyPlaylists[playlist.id] = playlist;
+		this.subscriptions.push(
+			this.spotifyService.getAuthenticatedSpotify().pipe(
+				switchMap(spotifyApi => this.spotifyService.getPlaylists(spotifyApi))
+			).subscribe(playlists => {
+				this.spotifyPlaylists = {};
+				for (const playlist of playlists) {
+					this.spotifyPlaylists[playlist.id] = playlist;
+				}
+			})
+		);
+	}
+
+	ngOnDestroy() {
+		for (const subscription of this.subscriptions) {
+			if (subscription) {
+				subscription.unsubscribe();
 			}
-		});
+		}
 	}
 
 	getPlaylistName(id: string) {
