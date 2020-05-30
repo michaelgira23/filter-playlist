@@ -2,13 +2,18 @@
 
 .song {
 	display: flex;
+	align-items: flex-start;
 
 	.song-image {
 		width: calc(100% / 3);
+		flex-grow: 0;
+		flex-shrink: 0;
 	}
 
 	.song-info {
 		margin-left: 2rem;
+		flex-grow: 1;
+		flex-shrink: 1;
 
 		> * {
 			margin-top: 0;

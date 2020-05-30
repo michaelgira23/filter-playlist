@@ -15,8 +15,8 @@ import { environment } from '../environments/environment';
 export class SpotifyService {
 
 	// Timestamp that Spotify access token expires (in seconds)
-	spotifyApiExpiresAt: number = null;
-	spotifyApi$ = new BehaviorSubject<SpotifyWebApi>(null);
+	private spotifyApiExpiresAt: number = null;
+	private spotifyApi$ = new BehaviorSubject<SpotifyWebApi>(null);
 
 	constructor(private afAuth: AngularFireAuth, private afs: AngularFirestore, private http: HttpClient) { }
 
