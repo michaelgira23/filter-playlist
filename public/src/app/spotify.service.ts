@@ -53,7 +53,7 @@ export class SpotifyService {
 	createPlaylist(name: string) {
 		return this.generateOptions().pipe(
 			switchMap(options =>
-				this.http.post<GetPlaylistsResponse>(`${environment.firebaseFunctionsHost}/auth/playlists`, { name }, options)
+				this.http.post<GetPlaylistsResponse>(`${environment.firebaseFunctionsHost}/spotify/playlists`, { name }, options)
 			)
 		);
 	}

@@ -1,4 +1,33 @@
 {
-  "indexes": [],
+  "indexes": [
+    {
+      "collectionGroup": "filterActions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "playlistId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "order",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "filterCriteria",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "playlistId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "order",
+          "order": "ASCENDING"
+        }
+      ]
+    }
+  ],
   "fieldOverrides": []
 }
