@@ -102,8 +102,7 @@ export class SpotifyService {
 		return this.generateOptions().pipe(
 			switchMap(options =>
 				this.http.get<GetSongsFromPlaylistResponse>(`${environment.firebaseFunctionsHost}/spotify/songs/${playlistId}`, options)
-			),
-			tap(b => console.log(b))
+			)
 		);
 	}
 
@@ -139,7 +138,6 @@ export class SpotifyService {
 			switchMap(options =>
 				this.http.get<GetTokenResponse>(`${environment.firebaseFunctionsHost}/auth/token`, options)
 			),
-			tap(b => console.log(b)),
 			switchMap(({ accessToken, expiresAt }) => {
 				this.spotifyApi$.next(new SpotifyWebApi({ accessToken }));
 				this.spotifyApiExpiresAt = expiresAt * 1000;

@@ -176,7 +176,6 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 			first(),
 			map(completelyFilteredSongs => {
 				console.log('playlist', this.spotifyPlaylist);
-				console.log('playlist songs', completelyFilteredSongs, this.playlistSongs);
 
 				// Determine what songs to play
 				this.queueSongsOrdered = this.playlistSongs
@@ -184,9 +183,6 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 					.filter(uri => !completelyFilteredSongs.includes(uri));
 
 				this.queueSongsShuffled = _.shuffle(this.queueSongsOrdered);
-
-				console.log('queue ordered', this.queueSongsOrdered);
-				console.log('queue shuffled', this.queueSongsShuffled);
 
 				// Initialize Spotify web player (for playing music in the browser)
 				if (!this.spotifyPlayer) {
@@ -215,7 +211,6 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 	}
 
 	onSpotifyPlayerStateChanged(state: Spotify.PlaybackState) {
-		console.log('state', state);
 		if (state === null) {
 			return;
 		}
@@ -240,7 +235,7 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 	}
 
 	async onSpotifyReady(instance: Spotify.WebPlaybackInstance) {
-		console.log('ready', instance, [instance.device_id]);
+		console.log('ready', instance);
 
 		// Start playback on web page
 		await this.spotifyApi.transferMyPlayback({
@@ -268,7 +263,6 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 		const maxUris = 100;
 		uris = uris.slice(0, maxUris);
 
-		console.log('play queue', uris);
 		await Promise.all([
 			this.spotifyApi.setShuffle({ state: false }),
 			this.spotifyApi.play({ uris })
@@ -304,7 +298,6 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 	}
 
 	filterSong() {
-		console.log('submit form', this.criteriaForm);
 		let currentUri: string;
 		this.song$.pipe(
 			first(),
