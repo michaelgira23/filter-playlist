@@ -124,30 +124,26 @@ app.get('/songs/:filteredPlaylistId', async (req, res, next) => {
 
 		// Max amount of songs we can get per API call
 		const MAX_SONG_LIMIT = 100;
-		// Cap offset at 100,000
-		const MAX_SONG_OFFSET = 100000;
 
 		const playlist = await (await Spotify.getPlaylist(filteredPlaylist.originId)).body;
 		let songs: SpotifyApi.PlaylistTrackObject[] = playlist.tracks.items;
 
-		// Offset of already fetched playlists
-		let offset = songs.length;
 		// Total number of playlists the user has
-		let songTotal = playlist.tracks.total;
+		const songTotal = playlist.tracks.total;
 
-		do {
-			if (offset > MAX_SONG_OFFSET) {
-				break;
-			}
+		// Create array of API requests to execute in parallel
+		const songQueries = [];
+		for (let offset = songs.length; offset < songTotal; offset += MAX_SONG_LIMIT) {
+			songQueries.push(
+				Spotify.getPlaylistTracks(filteredPlaylist.originId, {
+					offset,
+					limit: MAX_SONG_LIMIT
+				})
+			);
+		}
 
-			const playlistData = await Spotify.getPlaylistTracks(filteredPlaylist.originId, {
-				offset,
-				limit: MAX_SONG_LIMIT
-			});
-			songTotal = playlistData.body.total;
-			songs = [...songs, ...playlistData.body.items];
-			offset += MAX_SONG_LIMIT;
-		} while (songs.length < songTotal);
+		const songQueriesResult = await (await Promise.all(songQueries)).map(result => result.body.items);
+		songs = songs.concat(...songQueriesResult);
 
 		res.json({ playlist, songs });
 	} catch (err) {
