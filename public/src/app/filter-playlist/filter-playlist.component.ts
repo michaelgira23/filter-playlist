@@ -269,7 +269,10 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 		uris = uris.slice(0, maxUris);
 
 		console.log('play queue', uris);
-		await this.spotifyApi.play({ uris });
+		await Promise.all([
+			this.spotifyApi.setShuffle({ state: false }),
+			this.spotifyApi.play({ uris })
+		]);
 	}
 
 	onSpotifyNotReady(instance: Spotify.WebPlaybackInstance) {
