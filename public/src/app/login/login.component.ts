@@ -49,7 +49,7 @@ export class LoginComponent implements OnInit {
 	}
 
 	login() {
-		window.location.href = `${environment.firebaseFunctionsHost}/widgets/login`;
+		window.location.href = `${environment.firebaseFunctionsHost}/auth/login`;
 	}
 
 	/**
@@ -65,7 +65,7 @@ export class LoginComponent implements OnInit {
 			// Send cookies with request
 			withCredentials: true
 		};
-		return this.http.post<{ token: string }>(`${environment.firebaseFunctionsHost}/widgets/token`, body, options).pipe(
+		return this.http.post<{ token: string }>(`${environment.firebaseFunctionsHost}/auth/token`, body, options).pipe(
 			map(data => data.token)
 		);
 	}

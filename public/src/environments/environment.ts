@@ -15,7 +15,8 @@ export const environment = {
 		appId: '1:767916801008:web:10f5433284cb660dc1fb35',
 		measurementId: 'G-33YVXNK4E0'
 	},
-	firebaseFunctionsHost: 'https://us-central1-filter-playlist.cloudfunctions.net'
+	// firebaseFunctionsHost: 'https://us-central1-filter-playlist.cloudfunctions.net'
+	firebaseFunctionsHost: 'http://localhost:5001/filter-playlist/us-central1'
 };
 
 /*
@@ -25,4 +26,4 @@ export const environment = {
  * This import should be commented out in production mode because it will have a negative impact
  * on performance if an error is thrown.
  */
-// import 'zone.js/dist/zone-error';  // Included with Angular CLI.
+import 'zone.js/dist/zone-error'; // Included with Angular CLI.

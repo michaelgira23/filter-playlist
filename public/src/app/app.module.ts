@@ -6,7 +6,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 import { TextFieldModule } from '@angular/cdk/text-field';
 import { AngularFireModule } from '@angular/fire';
 import { AngularFireAnalyticsModule } from '@angular/fire/analytics';
-import { AngularFirestoreModule } from '@angular/fire/firestore';
+import { AngularFirestoreModule, SETTINGS } from '@angular/fire/firestore';
 import { AngularFireAuthModule } from '@angular/fire/auth';
 import { AngularFireAuthGuardModule } from '@angular/fire/auth-guard';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -59,6 +59,13 @@ import { SpotifyService } from './spotify.service';
 		AngularFireAuthGuardModule
 	],
 	providers: [
+		{
+			provide: SETTINGS,
+			useValue: environment.production ? undefined : {
+				host: 'localhost:8080',
+				ssl: false
+			}
+		},
 		FilteredPlaylistsService,
 		SpotifyService
 	],
