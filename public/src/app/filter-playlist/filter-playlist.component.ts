@@ -25,7 +25,7 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 	faStepBackward = faStepBackward;
 	faStepForward = faStepForward;
 
-	@ViewChild('progress', { static: false }) progress: ElementRef;
+	@ViewChild('progress') progress: ElementRef;
 
 	subscriptions: Subscription[] = [];
 	// Interval for updating the playback progress bar
