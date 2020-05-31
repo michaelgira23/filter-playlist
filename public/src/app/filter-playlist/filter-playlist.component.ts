@@ -91,12 +91,15 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 				switchMap(playlistId => {
 					return combineLatest(
 						this.spotify.getAuthenticatedSpotify(),
+						this.spotify.getSongsFromPlaylist(playlistId),
 						this.filteredPlaylists.getPlaylist(playlistId).snapshotChanges(),
 						this.filteredPlaylists.getCriteria(playlistId).snapshotChanges()
 					);
 				}),
-				switchMap(([spotifyApi, playlistSnapshot, criteriaSnapshot]) => {
+				switchMap(([spotifyApi, { playlist: spotifyPlaylist, songs: playlistSongs }, playlistSnapshot, criteriaSnapshot]) => {
 					this.spotifyApi = spotifyApi;
+					this.spotifyPlaylist = spotifyPlaylist;
+					this.playlistSongs = playlistSongs;
 					this.playlistId = playlistSnapshot.payload.id;
 					this.playlist = playlistSnapshot.payload.data();
 
@@ -112,7 +115,7 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 					this.criteria = newCriteria;
 
 					// Setup Spotify playback + API
-					return this.setupSpotify(this.playlist.originId);
+					return this.setupSpotify();
 				}),
 			).subscribe(
 				() => {
@@ -166,14 +169,9 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 		}
 	}
 
-	private setupSpotify(originId: string) {
+	private setupSpotify() {
 		// Get playlist info + tracks from Spotify
-		return from(this.spotify.getSongsFromPlaylist(this.spotifyApi, this.playlist.originId)).pipe(
-			switchMap(({ playlist, songs }) => {
-				this.spotifyPlaylist = playlist;
-				this.playlistSongs = songs;
-				return this.filteredPlaylists.getCompletelyFilteredSongs(this.playlistId, this.criteria.map(c => c.id));
-			}),
+		return this.filteredPlaylists.getCompletelyFilteredSongs(this.playlistId, this.criteria.map(c => c.id)).pipe(
 			// Only get first snapshot, otherwise will reload every time we rate a song
 			first(),
 			map(completelyFilteredSongs => {

@@ -58,34 +58,52 @@ export class SpotifyService {
 		);
 	}
 
-	getSongsFromPlaylist(spotifyApi: SpotifyWebApi, playlistId: string) {
-		// Initially get entire playlist object as well
-		let playlistObject: SpotifyApi.SinglePlaylistResponse;
-		return from(spotifyApi.getPlaylist(playlistId)).pipe(
-			map(response => {
-				playlistObject = response.body;
-				return response.body.tracks;
-			}),
-			// Recursively add playlist track requests until we get all the playlist tracks
-			expand((response: SpotifyApi.PlaylistTrackResponse) => {
-				// Check if remaining playlists
-				const currentSongCount = response.offset + response.limit;
-				if (currentSongCount < response.total) {
-					return from(spotifyApi.getPlaylistTracks(playlistId, { offset: currentSongCount })).pipe(
-						map(trackResponse => trackResponse.body)
-					);
-				} else {
-					// End of playlist
-					return of(null);
-				}
-			}, 1000),
-			// Ensure we only take valid non-null values
-			takeWhile(value => value !== null),
-			map(trackResponse => trackResponse.items),
-			// After all playlist retrievals completed, combine them all back together
-			reduce((acc, value) => [...acc, ...value], []),
-			// Re-add the initial plyalist object
-			map((tracks: SpotifyApi.PlaylistTrackObject[]) => ({ playlist: playlistObject, songs: tracks }))
+	// getSongsFromPlaylist(playlistId: string) {
+	// Initially get entire playlist object as well
+	// let spotifyApi: SpotifyWebApi;
+	// let playlistObject: SpotifyApi.SinglePlaylistResponse;
+	// return this.getAuthenticatedSpotify().pipe(
+	// 	switchMap(newSpotifyApi => {
+	// 		spotifyApi = newSpotifyApi;
+	// 		return from(spotifyApi.getPlaylist(playlistId));
+	// 	}),
+	// 	map(response => {
+	// 		playlistObject = response.body;
+	// 		return response.body.tracks;
+	// 	}),
+	// 	// Recursively add playlist track requests until we get all the playlist tracks
+	// 	expand((response: SpotifyApi.PlaylistTrackResponse) => {
+	// 		// Check if remaining playlists
+	// 		const currentSongCount = response.offset + response.limit;
+	// 		if (currentSongCount < response.total) {
+	// 			return from(spotifyApi.getPlaylistTracks(playlistId, { offset: currentSongCount })).pipe(
+	// 				map(trackResponse => trackResponse.body)
+	// 			);
+	// 		} else {
+	// 			// End of playlist
+	// 			return of(null);
+	// 		}
+	// 	}, 1000),
+	// 	// Ensure we only take valid non-null values
+	// 	takeWhile(value => value !== null),
+	// 	map(trackResponse => trackResponse.items),
+	// 	// After all playlist retrievals completed, combine them all back together
+	// 	reduce((acc, value) => [...acc, ...value], []),
+	// 	// Re-add the initial plyalist object
+	// 	map((tracks: SpotifyApi.PlaylistTrackObject[]) => ({ playlist: playlistObject, songs: tracks }))
+	// );
+	// }
+
+	/**
+	 * Return a Spotify playlist object and songs according to the filtered playlist id
+	 * @param playlistId Filtered playlist id
+	 */
+	getSongsFromPlaylist(playlistId: string) {
+		return this.generateOptions().pipe(
+			switchMap(options =>
+				this.http.get<GetSongsFromPlaylistResponse>(`${environment.firebaseFunctionsHost}/spotify/songs/${playlistId}`, options)
+			),
+			tap(b => console.log(b))
 		);
 	}
 
@@ -119,7 +137,7 @@ export class SpotifyService {
 	private createSpotifyApi() {
 		return this.generateOptions().pipe(
 			switchMap(options =>
-				this.http.get<{ accessToken: string, expiresAt: number }>(`${environment.firebaseFunctionsHost}/auth/token`, options)
+				this.http.get<GetTokenResponse>(`${environment.firebaseFunctionsHost}/auth/token`, options)
 			),
 			tap(b => console.log(b)),
 			switchMap(({ accessToken, expiresAt }) => {
@@ -147,4 +165,14 @@ export class SpotifyService {
 
 interface GetPlaylistsResponse {
 	playlists: SpotifyApi.PlaylistObjectSimplified[];
+}
+
+interface GetSongsFromPlaylistResponse {
+	playlist: SpotifyApi.SinglePlaylistResponse;
+	songs: SpotifyApi.PlaylistTrackObject[];
+}
+
+interface GetTokenResponse {
+	accessToken: string;
+	expiresAt: number;
 }
