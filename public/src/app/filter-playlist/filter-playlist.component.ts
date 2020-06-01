@@ -89,12 +89,12 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 			this.route.paramMap.pipe(
 				map(params => params.get('id')),
 				switchMap(playlistId => {
-					return combineLatest(
+					return combineLatest([
 						this.spotify.getAuthenticatedSpotify(),
 						this.spotify.getSongsFromPlaylist(playlistId),
 						this.filteredPlaylists.getPlaylist(playlistId).snapshotChanges(),
 						this.filteredPlaylists.getCriteria(playlistId).snapshotChanges()
-					);
+					]);
 				}),
 				switchMap(([spotifyApi, { playlist: spotifyPlaylist, songs: playlistSongs }, playlistSnapshot, criteriaSnapshot]) => {
 					this.spotifyApi = spotifyApi;

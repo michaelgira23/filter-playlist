@@ -71,11 +71,11 @@ export class UpsertPlaylistComponent implements OnInit, OnDestroy {
 				tap(id => { this.form.controls.id.setValue(id); }),
 				filter(id => !!id),
 				switchMap(playlistId => {
-					return combineLatest(
+					return combineLatest([
 						this.filteredPlaylists.getPlaylist(playlistId).snapshotChanges(),
 						this.filteredPlaylists.getActions(playlistId).snapshotChanges(),
 						this.filteredPlaylists.getCriteria(playlistId).snapshotChanges()
-					);
+					]);
 				})
 			).subscribe(([playlistSnapshot, actionsSnapshot, criteriaSnapshot]) => {
 				// Rehydrate form with existing data

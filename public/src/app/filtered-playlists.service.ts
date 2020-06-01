@@ -111,7 +111,7 @@ export class FilteredPlaylistsService {
 				playlistDoc = playlistDocRef;
 				actionsCollection = this.getActions(playlistDocRef.id);
 				criteriaCollection = this.getCriteria(playlistDocRef.id);
-				return combineLatest(actionsCollection.snapshotChanges(), criteriaCollection.snapshotChanges());
+				return combineLatest([actionsCollection.snapshotChanges(), criteriaCollection.snapshotChanges()]);
 			}),
 			first(),
 			switchMap(([dbActions, dbCriteria]) => {
