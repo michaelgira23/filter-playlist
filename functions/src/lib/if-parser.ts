@@ -1,6 +1,7 @@
 import { ActionIfType, FirebaseAction } from '../../../public/src/model/actions';
+import { FirebaseFilteredSong } from '../../../public/src/model/filtered-song';
 
-export function parseIf(markedCriteria: MarkedCriteria, action: FirebaseAction) {
+export function parseIf(markedCriteria: FirebaseFilteredSong['markedCriteria'], action: FirebaseAction) {
 	switch (action.ifType) {
 		case ActionIfType.ALL_PASSED:
 			return Object.values(markedCriteria).every(c => c);
@@ -15,8 +16,4 @@ export function parseIf(markedCriteria: MarkedCriteria, action: FirebaseAction) 
 		case ActionIfType.CRITERIA_N_FAILED:
 			return !markedCriteria[action.ifType];
 	}
-}
-
-export interface MarkedCriteria {
-	[id: string]: boolean;
 }

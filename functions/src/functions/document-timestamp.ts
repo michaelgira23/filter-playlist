@@ -19,25 +19,25 @@ export const documentCreatedDate = functions.firestore
 /**
  * Add `updatedAt` property for filtered songs
  */
-export const documentUpdatedDate = functions.firestore
-	.document('filteredPlaylists/{playlistId}/filteredSongs/{documentId}')
-	.onWrite((snap, context) => {
+// export const documentUpdatedDate = functions.firestore
+// 	.document('filteredPlaylists/{playlistId}/filteredSongs/{documentId}')
+// 	.onWrite((snap, context) => {
 
-		// Compare before and after snapshots to avoid infinite loop of updates
-		const hasChanged = !snap.before.exists || !_.isEqual(
-			_.omit(snap.before.data(), 'updatedAt'),
-			_.omit(snap.after.data(), 'updatedAt')
-		);
+// 		// Compare before and after snapshots to avoid infinite loop of updates
+// 		const hasChanged = !snap.before.exists || !_.isEqual(
+// 			_.omit(snap.before.data(), 'updatedAt'),
+// 			_.omit(snap.after.data(), 'updatedAt')
+// 		);
 
-		if (hasChanged) {
-			return snap.after.ref.set(
-				{ updatedAt: snap.after.updateTime?.toMillis() },
-				{ merge: true }
-			).catch(error => {
-				console.error(error);
-				return false;
-			});
-		} else {
-			return false;
-		}
-	});
+// 		if (hasChanged) {
+// 			return snap.after.ref.set(
+// 				{ updatedAt: snap.after.updateTime?.toMillis() },
+// 				{ merge: true }
+// 			).catch(error => {
+// 				console.error(error);
+// 				return false;
+// 			});
+// 		} else {
+// 			return false;
+// 		}
+// 	});
