@@ -5,14 +5,12 @@ import { ActionThenType, FirebaseAction } from '../../../public/src/model/action
 export async function executeThen(spotifyApi: SpotifyWebApi, originId: string, songUri: string, action: FirebaseAction) {
 	switch (action.thenType) {
 		case ActionThenType.ADD_TO_PLAYLIST:
-			console.log('add to playlist', songUri, 'to', action.thenId);
 			if (action.thenId === null) {
 				throw new Error('Action thenId expected to be set but was null!');
 			}
 			await spotifyAddToPlaylist(spotifyApi, action.thenId, songUri);
 			break;
 		case ActionThenType.REMOVE_FROM_CURRENT_PLAYLIST:
-			console.log('remove from current playlist', songUri, 'from', originId);
 			await spotifyRemoveFromPlaylist(spotifyApi, originId, songUri);
 			break;
 	}
