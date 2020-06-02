@@ -13,7 +13,7 @@
   "engines": {
     "node": "10"
   },
-  "main": "lib/src/index.js",
+  "main": "lib/functions/src/index.js",
   "dependencies": {
     "body-parser": "^1.19.0",
     "cookie-parser": "^1.4.4",
@@ -30,8 +30,8 @@
     "@types/cors": "^2.8.6",
     "@types/spotify-web-api-node": "^4.0.1",
     "firebase-functions-test": "^0.1.6",
-    "tslint": "^5.12.0",
-    "typescript": "^3.2.2"
+    "tslint": "~5.15.0",
+    "typescript": "~3.8.3"
   },
   "private": true
 }
