@@ -4,9 +4,9 @@ import * as functions from 'firebase-functions';
 
 import { FirebaseAction } from '../../../public/src/model/actions';
 import { FirebaseFilteredPlaylist } from '../../../public/src/model/filtered-playlist';
-import { FirebaseFilteredSong } from '../../../public/src/model/filtered-song';
+import { FirebaseFilteredSong, FirebaseMarkedCriteria, FirebaseExecutedActions } from '../../../public/src/model/filtered-song';
 import { spotifyFactory } from '../spotify';
-import { executeThen } from '../lib/then-executer';
+import { executeThen, undoThen } from '../lib/then-executer';
 import { parseIf } from '../lib/if-parser';
 
 /**
@@ -24,9 +24,10 @@ export const filteredPlaylistActions = functions.firestore
 		}
 
 		// Compare before and after snapshots to avoid infinite loop of updates
+		const ignoredKeys = ['updatedAt', 'executedActions'];
 		const hasChanged = !change.before.exists || !_.isEqual(
-			_.omit(beforeData, 'updatedAt'),
-			_.omit(afterData, 'updatedAt')
+			_.omit(beforeData, ignoredKeys),
+			_.omit(afterData, ignoredKeys)
 		);
 		if (!hasChanged) {
 			return;
@@ -56,16 +57,31 @@ export const filteredPlaylistActions = functions.firestore
 		]);
 
 		// Only copy over the current criteria
-		const markedCriteria: FirebaseFilteredSong['markedCriteria'] = {};
+		const markedCriteria: FirebaseMarkedCriteria = {};
 		criteriaSnapshot.forEach((doc) => {
 			const id = doc.id;
 			markedCriteria[id] = afterData.markedCriteria[id];
 		});
 
+		const executedActions: FirebaseExecutedActions = {};
+		const previouslyExecutedActions: FirebaseExecutedActions = beforeData?.executedActions ?? {};
 		actionsSnapshot.forEach(async (doc) => {
+			const actionId = doc.id;
 			const action = doc.data() as FirebaseAction;
+
+
 			if (parseIf(markedCriteria, action)) {
-				await executeThen(spotifyApi, filteredPlaylist.createdBy, songUri, action)
+				// Action meets criteria. Execute action only if hasn't been executed already
+				executedActions[actionId] = true;
+				if (!previouslyExecutedActions[actionId]) {
+					await executeThen(spotifyApi, filteredPlaylist.createdBy, songUri, action);
+				}
+			} else {
+				// Action does not meet criteria. Ensure action is not executed and undo if has been previously executed.
+				executedActions[actionId] = false;
+				if (previouslyExecutedActions[actionId]) {
+					await undoThen(spotifyApi, filteredPlaylist.createdBy, songUri, action);
+				}
 			}
 		});
 
@@ -73,7 +89,10 @@ export const filteredPlaylistActions = functions.firestore
 		 * Add `updatedAt` timestamp
 		 */
 		return change.after.ref.set(
-			{ updatedAt: change.after.updateTime?.toMillis() },
+			{
+				updatedAt: change.after.updateTime?.toMillis(),
+				executedActions
+			},
 			{ merge: true }
 		).catch(error => {
 			console.error(error);

@@ -16,7 +16,7 @@ export async function executeThen(spotifyApi: SpotifyWebApi, originId: string, s
 	}
 }
 
-export async function ensureNotExecuted(spotifyApi: SpotifyWebApi, originId: string, songUri: string, action: FirebaseAction) {
+export async function undoThen(spotifyApi: SpotifyWebApi, originId: string, songUri: string, action: FirebaseAction) {
 	switch (action.thenType) {
 		case ActionThenType.ADD_TO_PLAYLIST:
 			if (action.thenId === null) {
