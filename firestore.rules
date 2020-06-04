@@ -15,9 +15,11 @@ service cloud.firestore {
 			}
 
 			allow create: if request.resource.data.keys().hasOnly(['createdBy', 'originId'])
+				&& request.resource.data.originId != null
 				&& request.auth.uid != null
 				&& request.auth.uid == request.resource.data.createdBy;
 			allow update: if request.resource.data.keys().hasOnly(['createdBy', 'originId'])
+				&& request.resource.data.originId != null
 				&& isOgUser();
 			allow read, delete: if isOgUser();
 
