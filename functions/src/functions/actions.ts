@@ -69,18 +69,17 @@ export const filteredPlaylistActions = functions.firestore
 			const actionId = doc.id;
 			const action = doc.data() as FirebaseAction;
 
-
 			if (parseIf(markedCriteria, action)) {
 				// Action meets criteria. Execute action only if hasn't been executed already
 				executedActions[actionId] = true;
 				if (!previouslyExecutedActions[actionId]) {
-					await executeThen(spotifyApi, filteredPlaylist.createdBy, songUri, action);
+					await executeThen(spotifyApi, filteredPlaylist.originId, songUri, action);
 				}
 			} else {
 				// Action does not meet criteria. Ensure action is not executed and undo if has been previously executed.
 				executedActions[actionId] = false;
 				if (previouslyExecutedActions[actionId]) {
-					await undoThen(spotifyApi, filteredPlaylist.createdBy, songUri, action);
+					await undoThen(spotifyApi, filteredPlaylist.originId, songUri, action);
 				}
 			}
 		});
