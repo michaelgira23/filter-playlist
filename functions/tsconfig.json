@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "experimentalDecorators": true,
     "esModuleInterop": true,
     "module": "commonjs",
     "noImplicitReturns": true,
@@ -12,6 +13,7 @@
   },
   "compileOnSave": true,
   "include": [
-    "src"
+    "src",
+    "test"
   ]
 }
