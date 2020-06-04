@@ -1,5 +1,7 @@
-export const debug = true;
-export const host = debug ? 'http://localhost:4200' : 'https://filter-playlist.web.app';
+import * as functions from 'firebase-functions';
+
+export const isProduction = functions.config().environment.production === 'true';
+export const host = isProduction ? 'https://filter-playlist.web.app' : 'http://localhost:4200';
 
 // Spotify OAuth scopes to request
 export const OAUTH_SCOPES = [
