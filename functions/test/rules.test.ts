@@ -58,6 +58,7 @@ export class FilterPlaylists {
 		const auth = { uid: 'Billiam' };
 		const db = authedApp(auth);
 		const filteredPlaylist = db.collection('filteredPlaylists').doc('123');
+
 		await firebase.assertFails(filteredPlaylist.set({
 			originId: 'abc'
 		}));
@@ -68,6 +69,7 @@ export class FilterPlaylists {
 		const auth = { uid: 'Billiam' };
 		const db = authedApp(auth);
 		const filteredPlaylist = db.collection('filteredPlaylists').doc('123');
+
 		await firebase.assertFails(filteredPlaylist.set({
 			createdBy: auth.uid
 		}));
@@ -78,6 +80,7 @@ export class FilterPlaylists {
 		const auth = { uid: 'Billiam' };
 		const db = authedApp(auth);
 		const filteredPlaylist = db.collection('filteredPlaylists').doc('123');
+
 		await firebase.assertSucceeds(filteredPlaylist.set({
 			createdBy: auth.uid,
 			originId: 'abc'
@@ -89,8 +92,21 @@ export class FilterPlaylists {
 		const auth = null;
 		const db = authedApp(auth);
 		const filteredPlaylist = db.collection('filteredPlaylists').doc('123');
+
 		await firebase.assertFails(filteredPlaylist.set({
 			createdBy: auth,
+			originId: 'abc'
+		}));
+	}
+
+	@test
+	async 'does not allow unathenticated people to create a playlist on behalf of someone else'() {
+		const auth = null;
+		const db = authedApp(auth);
+		const filteredPlaylist = db.collection('filteredPlaylists').doc('123');
+
+		await firebase.assertFails(filteredPlaylist.set({
+			createdBy: 'Billiam',
 			originId: 'abc'
 		}));
 	}
@@ -100,6 +116,7 @@ export class FilterPlaylists {
 		const auth = { uid: 'Bill' };
 		const db = authedApp(auth);
 		const filteredPlaylist = db.collection('filteredPlaylists').doc('123');
+
 		await firebase.assertFails(filteredPlaylist.set({
 			createdBy: 'Will',
 			originId: 'abc'
@@ -115,6 +132,7 @@ export class FilterPlaylists {
 		const auth = { uid: 'Billiam' };
 		const db = authedApp(auth);
 		const filteredPlaylist = db.collection('filteredPlaylists').doc('123');
+
 		await firebase.assertSucceeds(filteredPlaylist.set({
 			createdBy: auth.uid,
 			originId: 'abc'
@@ -127,10 +145,27 @@ export class FilterPlaylists {
 	}
 
 	@test
+	async 'allows users to update by just specifying originId'() {
+		const auth = { uid: 'Billiam' };
+		const db = authedApp(auth);
+		const filteredPlaylist = db.collection('filteredPlaylists').doc('123');
+
+		await firebase.assertSucceeds(filteredPlaylist.set({
+			createdBy: auth.uid,
+			originId: 'abc'
+		}));
+
+		await firebase.assertSucceeds(filteredPlaylist.update({
+			originId: '123'
+		}));
+	}
+
+	@test
 	async 'does not allow users to update createdBy'() {
 		const auth = { uid: 'Billiam' };
 		const db = authedApp(auth);
 		const filteredPlaylist = db.collection('filteredPlaylists').doc('123');
+
 		await firebase.assertSucceeds(filteredPlaylist.set({
 			createdBy: auth.uid,
 			originId: 'abc'
@@ -146,6 +181,7 @@ export class FilterPlaylists {
 		const auth = { uid: 'Billiam' };
 		const db = authedApp(auth);
 		const filteredPlaylist = db.collection('filteredPlaylists').doc('123');
+
 		await firebase.assertSucceeds(filteredPlaylist.set({
 			createdBy: auth.uid,
 			originId: 'abc'
@@ -154,6 +190,26 @@ export class FilterPlaylists {
 		await firebase.assertSucceeds(filteredPlaylist.update({
 			createdBy: auth.uid,
 			originId: 'abc'
+		}));
+	}
+
+	@test
+	async 'does not allow users to update other people\'s playlist'() {
+		const authBilliam = { uid: 'Billiam' };
+		const dbBilliam = authedApp(authBilliam);
+
+		const authWilliam = { uid: 'William' };
+		const dbWilliam = authedApp(authWilliam);
+
+		const filteredPlaylistBilliam = dbBilliam.collection('filteredPlaylists').doc('123');
+		await firebase.assertSucceeds(filteredPlaylistBilliam.set({
+			createdBy: authBilliam.uid,
+			originId: 'abc'
+		}));
+
+		const filteredPlaylistWilliam = dbWilliam.collection('filteredPlaylists').doc('123');
+		await firebase.assertFails(filteredPlaylistWilliam.update({
+			originId: '123'
 		}));
 	}
 
@@ -166,6 +222,7 @@ export class FilterPlaylists {
 		const auth = { uid: 'Billiam' };
 		const db = authedApp(auth);
 		const filteredPlaylist = db.collection('filteredPlaylists').doc('123');
+
 		await firebase.assertSucceeds(filteredPlaylist.set({
 			createdBy: auth.uid,
 			originId: 'abc'
