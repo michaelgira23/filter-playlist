@@ -11,7 +11,8 @@ service cloud.firestore {
 
 			// Check if user created the current filtered playlist
 			function isOgUser() {
-				return request.auth.uid != null && request.auth.uid == resource.data.createdBy;
+				return request.auth.uid != null
+					&& request.auth.uid == resource.data.createdBy;
 			}
 
 			allow create: if request.resource.data.keys().hasOnly(['createdBy', 'originId'])
@@ -20,7 +21,9 @@ service cloud.firestore {
 				&& request.auth.uid == request.resource.data.createdBy;
 			allow update: if request.resource.data.keys().hasOnly(['createdBy', 'originId'])
 				&& request.resource.data.originId != null
-				&& isOgUser();
+				&& isOgUser()
+				// If update has createdBy value, it better match the current one
+				&& (request.resource.data.createdBy == resource.data.createdBy || !request.resource.data.keys().hasAll(['createdBy']));
 			allow read, delete: if isOgUser();
 
 			match /filteredSongs/{songId} {

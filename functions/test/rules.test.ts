@@ -49,6 +49,10 @@ after(async () => {
 @suite
 export class FilterPlaylists {
 
+	/**
+	 * Creating
+	 */
+
 	@test
 	async 'requires playlist to have createdBy property'() {
 		const auth = { uid: 'Billiam' };
@@ -100,6 +104,92 @@ export class FilterPlaylists {
 			createdBy: 'Will',
 			originId: 'abc'
 		}));
+	}
+
+	/**
+	 * Updating
+	 */
+
+	@test
+	async 'allows users to update originId'() {
+		const auth = { uid: 'Billiam' };
+		const db = authedApp(auth);
+		const filteredPlaylist = db.collection('filteredPlaylists').doc('123');
+		await firebase.assertSucceeds(filteredPlaylist.set({
+			createdBy: auth.uid,
+			originId: 'abc'
+		}));
+
+		await firebase.assertSucceeds(filteredPlaylist.update({
+			createdBy: auth.uid,
+			originId: '123'
+		}));
+	}
+
+	@test
+	async 'does not allow users to update createdBy'() {
+		const auth = { uid: 'Billiam' };
+		const db = authedApp(auth);
+		const filteredPlaylist = db.collection('filteredPlaylists').doc('123');
+		await firebase.assertSucceeds(filteredPlaylist.set({
+			createdBy: auth.uid,
+			originId: 'abc'
+		}));
+
+		await firebase.assertFails(filteredPlaylist.update({
+			createdBy: 'William'
+		}));
+	}
+
+	@test
+	async 'allows users to update both values without changing anything'() {
+		const auth = { uid: 'Billiam' };
+		const db = authedApp(auth);
+		const filteredPlaylist = db.collection('filteredPlaylists').doc('123');
+		await firebase.assertSucceeds(filteredPlaylist.set({
+			createdBy: auth.uid,
+			originId: 'abc'
+		}));
+
+		await firebase.assertSucceeds(filteredPlaylist.update({
+			createdBy: auth.uid,
+			originId: 'abc'
+		}));
+	}
+
+	/**
+	 * Deleting
+	 */
+
+	@test
+	async 'allows users to delete their playlist'() {
+		const auth = { uid: 'Billiam' };
+		const db = authedApp(auth);
+		const filteredPlaylist = db.collection('filteredPlaylists').doc('123');
+		await firebase.assertSucceeds(filteredPlaylist.set({
+			createdBy: auth.uid,
+			originId: 'abc'
+		}));
+
+		await firebase.assertSucceeds(filteredPlaylist.delete());
+	}
+
+	@test
+	async 'does not allow users to delete other people\'s playlist'() {
+		const authBilliam = { uid: 'Billiam' };
+		const dbBilliam = authedApp(authBilliam);
+
+		const authWilliam = { uid: 'William' };
+		const dbWilliam = authedApp(authWilliam);
+
+		const filteredPlaylistBilliam = dbBilliam.collection('filteredPlaylists').doc('123');
+		await firebase.assertSucceeds(filteredPlaylistBilliam.set({
+			createdBy: authBilliam.uid,
+			originId: 'abc'
+		}));
+
+		const filteredPlaylistWilliam = dbWilliam.collection('filteredPlaylists').doc('123');
+		await firebase.assertFails(filteredPlaylistWilliam.delete());
 	}
 
 }
