@@ -2,8 +2,10 @@
 // tslint:disable: no-implicit-dependencies
 import * as firebase from '@firebase/testing';
 import * as fs from 'fs';
-import { suite, test } from '@testdeck/mocha';
+import { suite, test, only } from '@testdeck/mocha';
 // tslint:enable: no-implicit-dependencies
+
+only;
 
 /*
  * ============
@@ -121,6 +123,42 @@ export class FilterPlaylists {
 			createdBy: 'Will',
 			originId: 'abc'
 		}));
+	}
+
+	/**
+	 * Reading
+	 */
+
+	@test
+	async 'allows users to read their playlist'() {
+		const auth = { uid: 'Billiam' };
+		const db = authedApp(auth);
+		const filteredPlaylist = db.collection('filteredPlaylists').doc('123');
+
+		await firebase.assertSucceeds(filteredPlaylist.set({
+			createdBy: auth.uid,
+			originId: 'abc'
+		}));
+
+		await firebase.assertSucceeds(filteredPlaylist.get());
+	}
+
+	@test
+	async 'does not allow users to read other people\'s playlist'() {
+		const authBilliam = { uid: 'Billiam' };
+		const dbBilliam = authedApp(authBilliam);
+
+		const authWilliam = { uid: 'William' };
+		const dbWilliam = authedApp(authWilliam);
+
+		const filteredPlaylistBilliam = dbBilliam.collection('filteredPlaylists').doc('123');
+		await firebase.assertSucceeds(filteredPlaylistBilliam.set({
+			createdBy: authBilliam.uid,
+			originId: 'abc'
+		}));
+
+		const filteredPlaylistWilliam = dbWilliam.collection('filteredPlaylists').doc('123');
+		await firebase.assertFails(filteredPlaylistWilliam.get());
 	}
 
 	/**
