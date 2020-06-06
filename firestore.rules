@@ -10,22 +10,26 @@ service cloud.firestore {
 		match /filteredPlaylists/{playlistId} {
 
 			// Check if user created the current filtered playlist
-			function isOgUser() {
+			function isOgUser(compareTo) {
 				return request.auth.uid != null
-					&& request.auth.uid == resource.data.createdBy;
+					&& request.auth.uid == compareTo;
 			}
 
 			allow create: if request.resource.data.keys().hasOnly(['createdBy', 'originId'])
 				&& request.resource.data.originId != null
-				&& request.auth.uid != null
-				&& request.auth.uid == request.resource.data.createdBy;
-			allow update: if request.resource.data.keys().hasOnly(['createdBy', 'originId', 'createdAt'])
-				&& request.resource.data.createdAt == resource.data.createdAt
+				&& isOgUser(request.resource.data.createdBy);
+			allow update: if (
+					request.resource.data.keys().hasOnly(['createdBy', 'originId'])
+					// May have `createdAt` property if Firebase Function already triggered. If so, it should not have been modified.
+					|| (
+						request.resource.data.keys().hasOnly(['createdBy', 'originId', 'createdAt'])
+						&& request.resource.data.createdAt == resource.data.createdAt
+					)
+				)
 				&& request.resource.data.originId != null
-				&& request.auth.uid != null
-				&& request.auth.uid == request.resource.data.createdBy
-				&& request.auth.uid == resource.data.createdBy;
-			allow read, delete: if isOgUser();
+				&& isOgUser(request.resource.data.createdBy)
+				&& isOgUser(resource.data.createdBy);
+			allow read, delete: if isOgUser(resource.data.createdBy);
 
 			match /filteredSongs/{songId} {
 
