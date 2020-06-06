@@ -19,11 +19,12 @@ service cloud.firestore {
 				&& request.resource.data.originId != null
 				&& request.auth.uid != null
 				&& request.auth.uid == request.resource.data.createdBy;
-			allow update: if request.resource.data.keys().hasOnly(['createdBy', 'originId'])
+			allow update: if request.resource.data.keys().hasOnly(['createdBy', 'originId', 'createdAt'])
+				&& request.resource.data.createdAt == resource.data.createdAt
 				&& request.resource.data.originId != null
-				&& isOgUser()
-				// If update has createdBy value, it better match the current one
-				&& (request.resource.data.createdBy == resource.data.createdBy || !request.resource.data.keys().hasAll(['createdBy']));
+				&& request.auth.uid != null
+				&& request.auth.uid == request.resource.data.createdBy
+				&& request.auth.uid == resource.data.createdBy;
 			allow read, delete: if isOgUser();
 
 			match /filteredSongs/{songId} {
