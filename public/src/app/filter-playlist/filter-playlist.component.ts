@@ -212,10 +212,11 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 	}
 
 	onSpotifyPlayerStateChanged(state: Spotify.PlaybackState) {
-		console.log('Spotify state change', state.track_window.current_track.uri, state);
 		if (state === null) {
+			console.log('Spotify state change', state);
 			return;
 		}
+		console.log('Spotify state change', state.track_window.current_track.uri, state);
 
 		this.songTitle = state.track_window.current_track.name;
 		this.songArtists = [];
