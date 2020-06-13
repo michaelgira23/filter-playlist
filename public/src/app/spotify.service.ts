@@ -58,42 +58,6 @@ export class SpotifyService {
 		);
 	}
 
-	// getSongsFromPlaylist(playlistId: string) {
-	// Initially get entire playlist object as well
-	// let spotifyApi: SpotifyWebApi;
-	// let playlistObject: SpotifyApi.SinglePlaylistResponse;
-	// return this.getAuthenticatedSpotify().pipe(
-	// 	switchMap(newSpotifyApi => {
-	// 		spotifyApi = newSpotifyApi;
-	// 		return from(spotifyApi.getPlaylist(playlistId));
-	// 	}),
-	// 	map(response => {
-	// 		playlistObject = response.body;
-	// 		return response.body.tracks;
-	// 	}),
-	// 	// Recursively add playlist track requests until we get all the playlist tracks
-	// 	expand((response: SpotifyApi.PlaylistTrackResponse) => {
-	// 		// Check if remaining playlists
-	// 		const currentSongCount = response.offset + response.limit;
-	// 		if (currentSongCount < response.total) {
-	// 			return from(spotifyApi.getPlaylistTracks(playlistId, { offset: currentSongCount })).pipe(
-	// 				map(trackResponse => trackResponse.body)
-	// 			);
-	// 		} else {
-	// 			// End of playlist
-	// 			return of(null);
-	// 		}
-	// 	}, 1000),
-	// 	// Ensure we only take valid non-null values
-	// 	takeWhile(value => value !== null),
-	// 	map(trackResponse => trackResponse.items),
-	// 	// After all playlist retrievals completed, combine them all back together
-	// 	reduce((acc, value) => [...acc, ...value], []),
-	// 	// Re-add the initial plyalist object
-	// 	map((tracks: SpotifyApi.PlaylistTrackObject[]) => ({ playlist: playlistObject, songs: tracks }))
-	// );
-	// }
-
 	/**
 	 * Return a Spotify playlist object and songs according to the filtered playlist id
 	 * @param playlistId Filtered playlist id
@@ -128,6 +92,10 @@ export class SpotifyService {
 				}
 			})
 		);
+	}
+
+	logout() {
+		this.spotifyApi$.next(null);
 	}
 
 	/**
