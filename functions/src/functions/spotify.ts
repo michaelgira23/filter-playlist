@@ -125,7 +125,10 @@ app.get('/songs/:filteredPlaylistId', async (req, res, next) => {
 		// Max amount of songs we can get per API call
 		const MAX_SONG_LIMIT = 100;
 
-		const playlist = await (await Spotify.getPlaylist(filteredPlaylist.originId)).body;
+		// Get the user's current market/country for songs
+		const spotifyUser = await (await Spotify.getMe()).body;
+
+		const playlist = await (await Spotify.getPlaylist(filteredPlaylist.originId, { market: spotifyUser.country })).body;
 		let songs: SpotifyApi.PlaylistTrackObject[] = playlist.tracks.items;
 
 		// Total number of playlists the user has
@@ -137,7 +140,8 @@ app.get('/songs/:filteredPlaylistId', async (req, res, next) => {
 			songQueries.push(
 				Spotify.getPlaylistTracks(filteredPlaylist.originId, {
 					offset,
-					limit: MAX_SONG_LIMIT
+					limit: MAX_SONG_LIMIT,
+					market: spotifyUser.country
 				})
 			);
 		}

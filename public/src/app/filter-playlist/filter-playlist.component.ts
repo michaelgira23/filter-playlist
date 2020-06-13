@@ -179,6 +179,7 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 
 				// Determine what songs to play
 				this.queueSongsOrdered = this.playlistSongs
+					.filter(song => song.track.is_playable)
 					.map(song => song.track.uri)
 					.filter(uri => !completelyFilteredSongs.includes(uri));
 
@@ -229,9 +230,7 @@ export class FilterPlaylistComponent implements OnInit, OnDestroy {
 		this.songCurrentPosition = state.position;
 		this.songDuration = state.duration;
 
-		// Try to get `linked_from` field first, if it exists. This is the original URI in the playlist
-		// https://stackoverflow.com/a/31742096/4594858
-		this.song$.next((state.track_window.current_track as any).linked_from.uri || state.track_window.current_track.uri);
+		this.song$.next(state.track_window.current_track.uri);
 	}
 
 	async onSpotifyReady(instance: Spotify.WebPlaybackInstance) {
